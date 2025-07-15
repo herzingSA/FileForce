@@ -93,16 +93,16 @@ async function testDownload(asAttachment) {
       const contentDisposition =
         response.headers.get("Content-Disposition") || "";
       const filenameMatch = contentDisposition.match(/filename="([^"]+)"/);
-      const filename = filenameMatch
-        ? filenameMatch[1]
-        : asAttachment
-        ? "test.pdf"
-        : "view.pdf";
+      const filename = filenameMatch ? filenameMatch[1] : "test.pdf";
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      a.click();
+      if (asAttachment) {
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        a.click();
+      } else {
+        window.open(url, "_blank");
+      }
       window.URL.revokeObjectURL(url);
       logOutput(`Download/View (as_attachment=${asAttachment}): Success`);
     } else {
