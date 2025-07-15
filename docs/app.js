@@ -128,8 +128,12 @@ async function testDownload(asAttachment) {
     // 1. Get metadata for file ID=1
     const { response: metaResponse } = await apiRequest("read", "GET");
     const meta = await metaResponse.json();
+    //  const record = Array.isArray(meta.data)
+    //    ? meta.data.find((item) => item.id === 1)
+    //    : null;
+
     const record = Array.isArray(meta.data)
-      ? meta.data.find((item) => item.id === 1)
+      ? meta.data.find((item) => String(item.id) === "1")
       : null;
 
     if (!record || !record.name) {
