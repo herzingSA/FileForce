@@ -121,6 +121,19 @@ async function testDelete() {
 
 async function testDownload(asAttachment) {
   try {
+    // 🔍 Pre-fetch metadata for ID=1
+    const { response: metaResponse } = await apiRequest("read", "GET");
+    const meta = await metaResponse.json();
+
+    const record = Array.isArray(meta.data)
+      ? meta.data.find((item) => item.id === 1)
+      : null;
+
+    if (!record || !record.name) {
+      throw new Error("Could not retrieve filename for download");
+    }
+
+    const filename = record.name;
     const query = `id=1&as_attachment=${asAttachment}`;
     const { response, contentType } = await apiRequest(
       "download",
@@ -144,14 +157,6 @@ async function testDownload(asAttachment) {
     }
 
     const blob = await response.blob();
-    const disposition = response.headers.get("Content-Disposition") || "";
-    let filename = "download.bin";
-
-    const match = disposition.match(/filename="?([^"]+)"?/);
-    if (match && match[1]) {
-      filename = match[1];
-    }
-
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
