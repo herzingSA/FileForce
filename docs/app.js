@@ -1,7 +1,4 @@
 const API_URL = "https://quanttrain.com/herzing/Hapi.php";
-let files = [];
-let sortKey = "name";
-let sortOrder = "asc";
 
 async function apiRequest(action, method, body = null, query = "") {
   try {
@@ -22,99 +19,40 @@ async function apiRequest(action, method, body = null, query = "") {
       : `${API_URL}?action=${action}`;
     const response = await fetch(url, options);
     if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
-    const contentType = response.headers.get("Content-Type") || "";
-    if (contentType.includes("application/json")) {
-      const result = await response.json();
-      if (result.error) throw new Error(result.error);
-      return result;
-    }
-    return { response, contentType };
+    return {
+      response,
+      contentType: response.headers.get("Content-Type") || "",
+    };
   } catch (error) {
-    logOutput(`Error in ${action}: ${error.message}`);
+    logOutput(`Error in ${action}: ${error.message}`, "error");
     throw error;
   }
 }
 
-function logOutput(message) {
+function logOutput(message, type = "info") {
   const output = document.getElementById("output");
-  output.innerHTML += `<p>${message}</p>`;
-}
-
-function updateTable() {
-  const table = document.getElementById("fileTable");
-  table.innerHTML = "";
-  let filteredFiles = files;
-  const searchTerm = document.getElementById("searchInput").value.toLowerCase();
-  if (searchTerm) {
-    filteredFiles = files.filter(
-      (file) =>
-        file.name.toLowerCase().includes(searchTerm) ||
-        file.type.toLowerCase().includes(searchTerm)
-    );
-  }
-  filteredFiles.sort((a, b) => {
-    let aValue = a[sortKey];
-    let bValue = b[sortKey];
-    if (sortKey === "created_at") {
-      aValue = new Date(aValue);
-      bValue = new Date(bValue);
-    }
-    if (sortOrder === "desc") [aValue, bValue] = [bValue, aValue];
-    return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
-  });
-  filteredFiles.forEach((file) => {
-    const row = document.createElement("tr");
-    row.innerHTML = `
-            <td>${file.name}</td>
-            <td>${file.type}</td>
-            <td>${new Date(file.created_at).toLocaleString()}</td>
-            <td>
-                <button class="btn btn-sm btn-info" onclick="testDownload(false, ${
-                  file.id
-                })">View</button>
-                <button class="btn btn-sm btn-success" onclick="testDownload(true, ${
-                  file.id
-                })">Download</button>
-                <button class="btn btn-sm btn-warning" onclick="testUpdate(${
-                  file.id
-                })">Edit</button>
-                <button class="btn btn-sm btn-danger" onclick="testDelete(${
-                  file.id
-                })">Delete</button>
-            </td>
-        `;
-    table.appendChild(row);
-  });
-  document
-    .querySelectorAll("th")
-    .forEach((th) => th.classList.remove("sorted", "asc", "desc"));
-  const sortTh = document.querySelector(`th[data-sort="${sortKey}"]`);
-  if (sortTh) {
-    sortTh.classList.add("sorted", sortOrder);
-  }
-}
-
-function sortTable(key) {
-  if (sortKey === key) {
-    sortOrder = sortOrder === "asc" ? "desc" : "asc";
-  } else {
-    sortKey = key;
-    sortOrder = "asc";
-  }
-  updateTable();
+  const p = document.createElement("p");
+  p.textContent = message;
+  p.className = type;
+  output.appendChild(p);
 }
 
 async function testUpload() {
   const fileInput = document.getElementById("fileInput");
   if (!fileInput.files[0]) {
-    logOutput("Upload: Please select a file");
+    logOutput("Upload: Please select a file", "warning");
     return;
   }
   const formData = new FormData();
   formData.append("file", fileInput.files[0]);
-  const result = await apiRequest("upload", "POST", formData);
-  if (result.success) await testRead();
-  logOutput(`Upload: ${JSON.stringify(result)}`);
+  try {
+    const { response } = await apiRequest("upload", "POST", formData);
+    const result = await response.json();
+    if (result.error) throw new Error(result.error);
+    logOutput(`Upload successful: ${JSON.stringify(result)}`, "success");
+  } catch (error) {
+    logOutput(`Upload failed: ${error.message}`, "error");
+  }
 }
 
 async function testCreate() {
@@ -123,81 +61,101 @@ async function testCreate() {
     type: "jpg",
     file_path: "files/sample.jpg",
   };
-  const result = await apiRequest("create", "POST", JSON.stringify(data));
-  if (result.success) await testRead();
-  logOutput(`Create: ${JSON.stringify(result)}`);
+  try {
+    const { response } = await apiRequest(
+      "create",
+      "POST",
+      JSON.stringify(data)
+    );
+    const result = await response.json();
+    if (result.error) throw new Error(result.error);
+    logOutput(`Created record: ${JSON.stringify(result)}`, "success");
+  } catch (error) {
+    logOutput(`Create failed: ${error.message}`, "error");
+  }
 }
 
 async function testRead() {
-  const result = await apiRequest("read", "GET");
-  if (result.data) {
-    files = result.data;
-    updateTable();
+  try {
+    const { response } = await apiRequest("read", "GET");
+    const result = await response.json();
+    if (result.error) throw new Error(result.error);
+    logOutput(`Fetched records: ${JSON.stringify(result)}`, "info");
+  } catch (error) {
+    logOutput(`Read failed: ${error.message}`, "error");
   }
-  logOutput(`Read: ${JSON.stringify(result)}`);
 }
 
-async function testUpdate(id) {
-  const newName = prompt("Enter new name (keep extension):", "new-test.pdf");
-  if (newName) {
-    const data = { name: newName };
-    const result = await apiRequest(
+async function testUpdate() {
+  const data = { name: "new-test.pdf", type: "pdf" };
+  try {
+    const { response } = await apiRequest(
       "update",
       "POST",
       JSON.stringify(data),
-      `id=${id}`
+      "id=1"
     );
-    if (result.success) await testRead();
-    logOutput(`Update: ${JSON.stringify(result)}`);
+    const result = await response.json();
+    if (result.error) throw new Error(result.error);
+    logOutput(`Update success: ${JSON.stringify(result)}`, "success");
+  } catch (error) {
+    logOutput(`Update failed: ${error.message}`, "error");
   }
 }
 
-async function testDelete(id) {
-  if (confirm("Delete file?")) {
-    const formData = new URLSearchParams({ id });
-    const result = await apiRequest("delete", "POST", formData.toString());
-    if (result.success) await testRead();
-    logOutput(`Delete: ${JSON.stringify(result)}`);
-  }
-}
-
-async function testDownload(asAttachment, id) {
+async function testDelete() {
   try {
-    const query = `id=${id}&as_attachment=${asAttachment}`;
+    const formData = new URLSearchParams({ id: "1" });
+    const { response } = await apiRequest(
+      "delete",
+      "POST",
+      formData.toString()
+    );
+    const result = await response.json();
+    if (result.error) throw new Error(result.error);
+    logOutput(`Delete success: ${JSON.stringify(result)}`, "success");
+  } catch (error) {
+    logOutput(`Delete failed: ${error.message}`, "error");
+  }
+}
+
+async function testDownload(asAttachment) {
+  try {
+    const query = `id=1&as_attachment=${asAttachment}`;
     const { response, contentType } = await apiRequest(
       "download",
       "GET",
       null,
       query
     );
+
     if (contentType.includes("application/json")) {
       const result = await response.json();
       if (result.error) throw new Error(result.error);
-      logOutput(`Download/View: ${JSON.stringify(result)}`);
-    } else {
-      if (asAttachment) {
-        const blob = await response.blob();
-        const contentDisposition =
-          response.headers.get("Content-Disposition") || "";
-        const filenameMatch = contentDisposition.match(/filename="([^"]+)"/);
-        const filename = filenameMatch ? filenameMatch[1] : "file";
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = filename;
-        a.click();
-        window.URL.revokeObjectURL(url);
-      } else {
-        window.open(`${API_URL}?action=download&${query}`, "_blank");
-      }
-      logOutput(`Download/View (as_attachment=${asAttachment}): Success`);
+      logOutput(`Download info: ${JSON.stringify(result)}`, "info");
+      return;
     }
+
+    if (!asAttachment) {
+      const viewUrl = `${API_URL}?action=download&${query}`;
+      window.open(viewUrl, "_blank");
+      logOutput(`View opened: ${viewUrl}`, "success");
+      return;
+    }
+
+    const blob = await response.blob();
+    const disposition = response.headers.get("Content-Disposition") || "";
+    const filenameMatch = disposition.match(/filename="([^"]+)"/);
+    const filename = filenameMatch ? filenameMatch[1] : "download.bin";
+
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    logOutput(`Downloaded file: ${filename}`, "success");
   } catch (error) {
-    logOutput(
-      `Download/View (as_attachment=${asAttachment}): ${error.message}`
-    );
+    logOutput(`Download/View failed: ${error.message}`, "error");
   }
 }
-
-document.getElementById("searchInput").addEventListener("input", updateTable);
-testRead(); // Initial load
