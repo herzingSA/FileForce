@@ -145,8 +145,12 @@ async function testDownload(asAttachment) {
 
     const blob = await response.blob();
     const disposition = response.headers.get("Content-Disposition") || "";
-    const filenameMatch = disposition.match(/filename="([^"]+)"/);
-    const filename = filenameMatch ? filenameMatch[1] : "download.bin";
+    let filename = "download.bin";
+
+    const match = disposition.match(/filename="?([^"]+)"?/);
+    if (match && match[1]) {
+      filename = match[1];
+    }
 
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
