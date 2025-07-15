@@ -97,33 +97,33 @@ async function testDownload(asAttachment) {
       null,
       query
     );
+
     if (contentType.includes("application/json")) {
       const result = await response.json();
       if (result.error) throw new Error(result.error);
       logOutput(`Download/View: ${JSON.stringify(result)}`);
-    } else if (
-      contentType.includes("application/pdf") ||
-      contentType.includes("application/octet-stream")
-    ) {
-      if (asAttachment) {
-        const blob = await response.blob();
-        const contentDisposition =
-          response.headers.get("Content-Disposition") || "";
-        const filenameMatch = contentDisposition.match(/filename="([^"]+)"/);
-        const filename = filenameMatch ? filenameMatch[1] : "test.pdf";
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = filename;
-        a.click();
-        window.URL.revokeObjectURL(url);
-      } else {
-        window.open(`${API_URL}?action=download&${query}`, "_blank");
-      }
-      logOutput(`Download/View (as_attachment=${asAttachment}): Success`);
-    } else {
-      throw new Error(`Unexpected Content-Type: ${contentType}`);
+      return;
     }
+
+    if (!asAttachment) {
+      const viewUrl = `${API_URL}?action=download&${query}`;
+      window.open(viewUrl, "_blank");
+      logOutput(`View: Opened ${viewUrl} in new tab`);
+      return;
+    }
+
+    const blob = await response.blob();
+    const disposition = response.headers.get("Content-Disposition") || "";
+    const filenameMatch = disposition.match(/filename="([^"]+)"/);
+    const filename = filenameMatch ? filenameMatch[1] : "download.bin";
+
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    logOutput(`Download: Saved ${filename}`);
   } catch (error) {
     logOutput(
       `Download/View (as_attachment=${asAttachment}): ${error.message}`
