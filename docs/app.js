@@ -1,5 +1,6 @@
 const API_URL = "https://quanttrain.com/herzing/Hapi.php";
 
+// Shared helper: Send API request
 async function apiRequest(action, method, body = null, query = "") {
   try {
     const options = { method };
@@ -29,6 +30,7 @@ async function apiRequest(action, method, body = null, query = "") {
   }
 }
 
+// Log visually to the page with styling
 function logOutput(message, type = "info") {
   const output = document.getElementById("output");
   const p = document.createElement("p");
@@ -37,6 +39,7 @@ function logOutput(message, type = "info") {
   output.appendChild(p);
 }
 
+// CRUD actions
 async function testUpload() {
   const fileInput = document.getElementById("fileInput");
   if (!fileInput.files[0]) {
@@ -119,12 +122,12 @@ async function testDelete() {
   }
 }
 
+// 🔽 Robust download with filename lookup
 async function testDownload(asAttachment) {
   try {
-    // 🔍 Pre-fetch metadata for ID=1
+    // 1. Get metadata for file ID=1
     const { response: metaResponse } = await apiRequest("read", "GET");
     const meta = await metaResponse.json();
-
     const record = Array.isArray(meta.data)
       ? meta.data.find((item) => item.id === 1)
       : null;
