@@ -59,7 +59,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         <td>
           <span class="filename-text" data-id="${
             file.id
-          }" style="cursor:pointer;">${file.name}</span>
+          }" data-bs-toggle="tooltip" title="Click to Rename" style="cursor:pointer;">${
+        file.name
+      }/span>
         </td>
         <td>${file.type.toUpperCase()}</td>
         <td>${file.created_at}</td>
