@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         <td>
           <span class="filename-text" data-id="${
             file.id
-          }" data-bs-toggle="tooltip" title="Click to Rename" style="cursor:pointer;">${
+          }" data-bs-toggle="tooltip" title="Click to Rename" style="cursor:pointer;"><i class="bi bi-pencil-fill me-1 text-muted"></i>${
         file.name
       }</span>
         </td>
