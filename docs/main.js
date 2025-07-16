@@ -59,44 +59,91 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // 🧠 Enable tooltips
-  function activateTooltips() {
-    const tooltipTriggerList = [].slice.call(
-      document.querySelectorAll('[data-bs-toggle="tooltip"]')
-    );
-    tooltipTriggerList.forEach((el) => new bootstrap.Tooltip(el));
-  }
+  // function activateTooltips() {
+  //   const tooltipTriggerList = [].slice.call(
+  //     document.querySelectorAll('[data-bs-toggle="tooltip"]')
+  //   );
+  //   tooltipTriggerList.forEach((el) => new bootstrap.Tooltip(el));
+  // }
 
-  // 🧩 Render file table
+  // // 🧩 Render file table
+  // function renderTable(files) {
+  //   tableBody.innerHTML = "";
+
+  //   files.forEach((file) => {
+  //     const row = document.createElement("tr");
+
+  //     const filenameCell = document.createElement("td");
+  //     const filenameSpan = createFilenameSpan(file.id, file.name);
+  //     filenameCell.appendChild(filenameSpan);
+
+  //     row.appendChild(filenameCell);
+
+  //     row.innerHTML += `
+  //       <td>${file.type.toUpperCase()}</td>
+  //       <td>${file.created_at}</td>
+  //       <td>
+  //         <button class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="tooltip" title="Download"
+  //           onclick="handleDownload(${file.id})">
+  //           <i class="bi bi-download"></i>
+  //         </button>
+  //         <button class="btn btn-sm btn-outline-secondary me-1" data-bs-toggle="tooltip" title="View"
+  //           onclick="handleView(${file.id})">
+  //           <i class="bi bi-eye"></i>
+  //         </button>
+  //         <button class="btn btn-sm btn-outline-danger" data-bs-toggle="tooltip" title="Delete"
+  //           onclick="handleDelete(${file.id})">
+  //           <i class="bi bi-trash"></i>
+  //         </button>
+  //       </td>
+  //     `;
+
+  //     tableBody.appendChild(row);
+  //   });
+
+  //   activateTooltips();
+  // }
+
   function renderTable(files) {
     tableBody.innerHTML = "";
 
     files.forEach((file) => {
       const row = document.createElement("tr");
 
+      // Filename cell
       const filenameCell = document.createElement("td");
       const filenameSpan = createFilenameSpan(file.id, file.name);
       filenameCell.appendChild(filenameSpan);
 
-      row.appendChild(filenameCell);
+      // Type cell
+      const typeCell = document.createElement("td");
+      typeCell.textContent = file.type.toUpperCase();
 
-      row.innerHTML += `
-        <td>${file.type.toUpperCase()}</td>
-        <td>${file.created_at}</td>
-        <td>
-          <button class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="tooltip" title="Download"
-            onclick="handleDownload(${file.id})">
-            <i class="bi bi-download"></i>
-          </button>
-          <button class="btn btn-sm btn-outline-secondary me-1" data-bs-toggle="tooltip" title="View"
-            onclick="handleView(${file.id})">
-            <i class="bi bi-eye"></i>
-          </button>
-          <button class="btn btn-sm btn-outline-danger" data-bs-toggle="tooltip" title="Delete"
-            onclick="handleDelete(${file.id})">
-            <i class="bi bi-trash"></i>
-          </button>
-        </td>
+      // Date cell
+      const dateCell = document.createElement("td");
+      dateCell.textContent = file.created_at;
+
+      // Actions cell
+      const actionsCell = document.createElement("td");
+      actionsCell.innerHTML = `
+        <button class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="tooltip" title="Download"
+          onclick="handleDownload(${file.id})">
+          <i class="bi bi-download"></i>
+        </button>
+        <button class="btn btn-sm btn-outline-secondary me-1" data-bs-toggle="tooltip" title="View"
+          onclick="handleView(${file.id})">
+          <i class="bi bi-eye"></i>
+        </button>
+        <button class="btn btn-sm btn-outline-danger" data-bs-toggle="tooltip" title="Delete"
+          onclick="handleDelete(${file.id})">
+          <i class="bi bi-trash"></i>
+        </button>
       `;
+
+      row.appendChild(filenameCell);
+      row.appendChild(typeCell);
+      row.appendChild(dateCell);
+      row.appendChild(actionsCell);
 
       tableBody.appendChild(row);
     });
