@@ -22,7 +22,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const files = e.dataTransfer.files;
     if (files.length > 0) {
       const result = await uploadFile({ files });
-      showStatus(result.message, result.status);
+      //showStatus(result.message, result.status);
 
       const updatedFiles = await fetchAllFiles();
       renderTable(updatedFiles);
@@ -32,20 +32,20 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("uploadBtn").addEventListener("click", async () => {
     const input = document.getElementById("fileInput");
     const result = await uploadFile(input);
-    showStatus(result.message, result.status);
+    //showStatus(result.message, result.status);
 
     const updatedFiles = await fetchAllFiles();
     renderTable(updatedFiles);
   });
 
   // Utility: Badge renderer
-  function showStatus(message, type = "info") {
-    const badge = document.createElement("div");
-    badge.textContent = message;
-    badge.className = `alert alert-${type} mb-2`;
-    statusArea.appendChild(badge);
-    setTimeout(() => badge.remove(), 5000);
-  }
+  // function showStatus(message, type = "info") {
+  //   const badge = document.createElement("div");
+  //   badge.textContent = message;
+  //   badge.className = `alert alert-${type} mb-2`;
+  //   statusArea.appendChild(badge);
+  //   setTimeout(() => badge.remove(), 5000);
+  // }
 
   // Utility: Tooltip initializer
   function activateTooltips() {
@@ -88,17 +88,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Action handlers
   window.handleDownload = async (id) => {
     const result = await downloadFile(id);
-    showStatus(result.message, result.status);
+    //showStatus(result.message, result.status);
   };
 
   window.handleView = async (id) => {
     const result = await viewFile(id);
-    showStatus(result.message, result.status);
+    //showStatus(result.message, result.status);
   };
 
   window.handleDelete = async (id) => {
     const result = await deleteFile(id);
-    showStatus(result.message, result.status);
+    //showStatus(result.message, result.status);
     // Refresh table
     const updatedFiles = await fetchAllFiles();
     renderTable(updatedFiles);
