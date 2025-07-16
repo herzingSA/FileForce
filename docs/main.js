@@ -23,6 +23,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (files.length > 0) {
       const result = await uploadFile({ files });
       //showStatus(result.message, result.status);
+      showStatus("File uploaded successfully", "success");
 
       const updatedFiles = await fetchAllFiles();
       renderTable(updatedFiles);
@@ -33,6 +34,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const input = document.getElementById("fileInput");
     const result = await uploadFile(input);
     //showStatus(result.message, result.status);
+    showStatus("File uploaded successfully", "success");
 
     const updatedFiles = await fetchAllFiles();
     renderTable(updatedFiles);
@@ -46,6 +48,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   //   statusArea.appendChild(badge);
   //   setTimeout(() => badge.remove(), 5000);
   // }
+  function showStatus(message, type = "info") {
+    const box = document.getElementById("statusBox");
+    box.textContent = message;
+
+    // Optional: soft styling
+    box.className = `small ms-3 text-${type}`;
+  }
 
   // Utility: Tooltip initializer
   function activateTooltips() {
@@ -89,16 +98,19 @@ document.addEventListener("DOMContentLoaded", async () => {
   window.handleDownload = async (id) => {
     const result = await downloadFile(id);
     //showStatus(result.message, result.status);
+    showStatus("File downloaded started", "success");
   };
 
   window.handleView = async (id) => {
     const result = await viewFile(id);
     //showStatus(result.message, result.status);
+    showStatus("File viewed successfully", "success");
   };
 
   window.handleDelete = async (id) => {
     const result = await deleteFile(id);
     //showStatus(result.message, result.status);
+    showStatus("File deleted successfully", "success");
     // Refresh table
     const updatedFiles = await fetchAllFiles();
     renderTable(updatedFiles);
