@@ -63,13 +63,39 @@ document.addEventListener("DOMContentLoaded", async () => {
     showStatus(result.message, result.status);
   };
 
+  // window.handleDelete = async (id) => {
+  //   const result = await deleteFile(id);
+  //   showStatus(result.message, result.status);
+  //   // Refresh table
+  //   const updatedFiles = await fetchAllFiles();
+  //   renderTable(updatedFiles);
+  // };
+
+  let pendingDeleteId = null;
+
   window.handleDelete = async (id) => {
-    const result = await deleteFile(id);
-    showStatus(result.message, result.status);
-    // Refresh table
-    const updatedFiles = await fetchAllFiles();
-    renderTable(updatedFiles);
+    pendingDeleteId = id;
+    const modal = new bootstrap.Modal(
+      document.getElementById("confirmDeleteModal")
+    );
+    modal.show();
   };
+
+  document
+    .getElementById("confirmDeleteBtn")
+    .addEventListener("click", async () => {
+      if (pendingDeleteId !== null) {
+        await deleteFile(pendingDeleteId);
+        showStatus("File deleted successfully", "success");
+
+        const updatedFiles = await fetchAllFiles();
+        renderTable(updatedFiles);
+        pendingDeleteId = null;
+      }
+
+      const modalEl = document.getElementById("confirmDeleteModal");
+      bootstrap.Modal.getInstance(modalEl)?.hide();
+    });
 
   // Initial render
   renderTable(allFiles);
