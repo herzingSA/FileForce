@@ -4,7 +4,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   const statusArea = document.getElementById("statusArea");
 
   const allFiles = await fetchAllFiles();
-
   const dropZone = document.getElementById("dropZone");
 
   dropZone.addEventListener("dragover", (e) => {
@@ -28,6 +27,15 @@ document.addEventListener("DOMContentLoaded", async () => {
       const updatedFiles = await fetchAllFiles();
       renderTable(updatedFiles);
     }
+  });
+
+  document.getElementById("uploadBtn").addEventListener("click", async () => {
+    const input = document.getElementById("fileInput");
+    const result = await uploadFile(input);
+    showStatus(result.message, result.status);
+
+    const updatedFiles = await fetchAllFiles();
+    renderTable(updatedFiles);
   });
 
   // Utility: Badge renderer
