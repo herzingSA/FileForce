@@ -5,6 +5,31 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const allFiles = await fetchAllFiles();
 
+  const dropZone = document.getElementById("dropZone");
+
+  dropZone.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    dropZone.classList.add("border-success");
+  });
+
+  dropZone.addEventListener("dragleave", () => {
+    dropZone.classList.remove("border-success");
+  });
+
+  dropZone.addEventListener("drop", async (e) => {
+    e.preventDefault();
+    dropZone.classList.remove("border-success");
+
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      const result = await uploadFile({ files });
+      showStatus(result.message, result.status);
+
+      const updatedFiles = await fetchAllFiles();
+      renderTable(updatedFiles);
+    }
+  });
+
   // Utility: Badge renderer
   function showStatus(message, type = "info") {
     const badge = document.createElement("div");
