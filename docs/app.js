@@ -1,9 +1,10 @@
 const API_URL = "https://quanttrain.com/herzing/Hapi.php";
 
-// Shared helper: Send API request
+// Generic API request handler
 async function apiRequest(action, method, body = null, query = "") {
   try {
     const options = { method };
+
     if (body instanceof FormData) {
       options.body = body;
     } else if (body) {
@@ -15,133 +16,39 @@ async function apiRequest(action, method, body = null, query = "") {
       };
       options.body = body;
     }
+
     const url = query
       ? `${API_URL}?action=${action}&${query}`
       : `${API_URL}?action=${action}`;
+
     const response = await fetch(url, options);
     if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+
     return {
       response,
       contentType: response.headers.get("Content-Type") || "",
     };
   } catch (error) {
-    logOutput(`Error in ${action}: ${error.message}`, "error");
+    console.error(`API error in '${action}':`, error.message);
     throw error;
   }
 }
 
-// Log visually to the page with styling
-function logOutput(message, type = "info") {
-  const output = document.getElementById("output");
-  const p = document.createElement("p");
-  p.textContent = message;
-  p.className = type;
-  output.appendChild(p);
+// File actions with dynamic ID support
+async function fetchFileMeta(id) {
+  const { response } = await apiRequest("read", "GET");
+  const data = await response.json();
+  return Array.isArray(data.data)
+    ? data.data.find((item) => item.id == id)
+    : null;
 }
 
-// CRUD actions
-async function testUpload() {
-  const fileInput = document.getElementById("fileInput");
-  if (!fileInput.files[0]) {
-    logOutput("Upload: Please select a file", "warning");
-    return;
-  }
-  const formData = new FormData();
-  formData.append("file", fileInput.files[0]);
+async function downloadFile(fileId) {
   try {
-    const { response } = await apiRequest("upload", "POST", formData);
-    const result = await response.json();
-    if (result.error) throw new Error(result.error);
-    logOutput(`Upload successful: ${JSON.stringify(result)}`, "success");
-  } catch (error) {
-    logOutput(`Upload failed: ${error.message}`, "error");
-  }
-}
+    const file = await fetchFileMeta(fileId);
+    if (!file || !file.name) throw new Error("Filename not found");
 
-async function testCreate() {
-  const data = {
-    name: "sample.jpg",
-    type: "jpg",
-    file_path: "files/sample.jpg",
-  };
-  try {
-    const { response } = await apiRequest(
-      "create",
-      "POST",
-      JSON.stringify(data)
-    );
-    const result = await response.json();
-    if (result.error) throw new Error(result.error);
-    logOutput(`Created record: ${JSON.stringify(result)}`, "success");
-  } catch (error) {
-    logOutput(`Create failed: ${error.message}`, "error");
-  }
-}
-
-async function testRead() {
-  try {
-    const { response } = await apiRequest("read", "GET");
-    const result = await response.json();
-    if (result.error) throw new Error(result.error);
-    logOutput(`Fetched records: ${JSON.stringify(result)}`, "info");
-  } catch (error) {
-    logOutput(`Read failed: ${error.message}`, "error");
-  }
-}
-
-async function testUpdate() {
-  const data = { name: "new-test.pdf", type: "pdf" };
-  try {
-    const { response } = await apiRequest(
-      "update",
-      "POST",
-      JSON.stringify(data),
-      "id=1"
-    );
-    const result = await response.json();
-    if (result.error) throw new Error(result.error);
-    logOutput(`Update success: ${JSON.stringify(result)}`, "success");
-  } catch (error) {
-    logOutput(`Update failed: ${error.message}`, "error");
-  }
-}
-
-async function testDelete() {
-  try {
-    const formData = new URLSearchParams({ id: "1" });
-    const { response } = await apiRequest(
-      "delete",
-      "POST",
-      formData.toString()
-    );
-    const result = await response.json();
-    if (result.error) throw new Error(result.error);
-    logOutput(`Delete success: ${JSON.stringify(result)}`, "success");
-  } catch (error) {
-    logOutput(`Delete failed: ${error.message}`, "error");
-  }
-}
-
-// 🔽 Robust download with filename lookup
-async function testDownload(asAttachment) {
-  try {
-    // 1. Get metadata for file ID=1
-    const { response: metaResponse } = await apiRequest("read", "GET");
-    const meta = await metaResponse.json();
-    //  const record = Array.isArray(meta.data)
-    //    ? meta.data.find((item) => item.id === 1)
-    //    : null;
-
-    const record = Array.isArray(meta.data)
-      ? meta.data.find((item) => String(item.id) === "1")
-      : null;
-
-    if (!record || !record.name) {
-      throw new Error("Could not retrieve filename for download");
-    }
-
-    const filename = record.name;
-    const query = `id=1&as_attachment=${asAttachment}`;
+    const query = `id=${fileId}&as_attachment=true`;
     const { response, contentType } = await apiRequest(
       "download",
       "GET",
@@ -152,26 +59,72 @@ async function testDownload(asAttachment) {
     if (contentType.includes("application/json")) {
       const result = await response.json();
       if (result.error) throw new Error(result.error);
-      logOutput(`Download info: ${JSON.stringify(result)}`, "info");
-      return;
-    }
-
-    if (!asAttachment) {
-      const viewUrl = `${API_URL}?action=download&${query}`;
-      window.open(viewUrl, "_blank");
-      logOutput(`View opened: ${viewUrl}`, "success");
-      return;
+      return { status: "info", message: result };
     }
 
     const blob = await response.blob();
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = filename;
+    a.download = file.name;
     a.click();
     window.URL.revokeObjectURL(url);
-    logOutput(`Downloaded file: ${filename}`, "success");
+
+    return { status: "success", message: `Downloaded file: ${file.name}` };
   } catch (error) {
-    logOutput(`Download/View failed: ${error.message}`, "error");
+    return { status: "error", message: `Download failed: ${error.message}` };
+  }
+}
+
+async function viewFile(fileId) {
+  try {
+    const query = `id=${fileId}&as_attachment=false`;
+    const url = `${API_URL}?action=download&${query}`;
+    window.open(url, "_blank");
+    return { status: "success", message: `View opened: ${url}` };
+  } catch (error) {
+    return { status: "error", message: `View failed: ${error.message}` };
+  }
+}
+
+async function deleteFile(fileId) {
+  try {
+    const body = new URLSearchParams({ id: fileId.toString() }).toString();
+    const { response } = await apiRequest("delete", "POST", body);
+    const result = await response.json();
+    if (result.error) throw new Error(result.error);
+
+    return { status: "success", message: `Deleted file ID: ${fileId}` };
+  } catch (error) {
+    return { status: "error", message: `Delete failed: ${error.message}` };
+  }
+}
+
+async function uploadFile(fileInput) {
+  const file = fileInput?.files?.[0];
+  if (!file) return { status: "warning", message: "No file selected" };
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  try {
+    const { response } = await apiRequest("upload", "POST", formData);
+    const result = await response.json();
+    if (result.error) throw new Error(result.error);
+
+    return { status: "success", message: `Upload successful: ${file.name}` };
+  } catch (error) {
+    return { status: "error", message: `Upload failed: ${error.message}` };
+  }
+}
+
+async function fetchAllFiles() {
+  try {
+    const { response } = await apiRequest("read", "GET");
+    const result = await response.json();
+    return Array.isArray(result.data) ? result.data : [];
+  } catch (error) {
+    console.error("Fetch files failed:", error.message);
+    return [];
   }
 }

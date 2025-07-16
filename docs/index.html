@@ -2,66 +2,94 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>FileForce Test Interface</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        margin: 2em;
-      }
-      h1 {
-        margin-bottom: 0.5em;
-      }
-      button,
-      input[type="file"] {
-        margin: 0.5em 0;
-      }
-      #output {
-        background: #f9f9f9;
-        padding: 1em;
-        margin-top: 1em;
-        border-radius: 6px;
-        border: 1px solid #ddd;
-      }
-      .success {
-        color: green;
-      }
-      .error {
-        color: red;
-      }
-      .info {
-        color: #333;
-      }
-      .warning {
-        color: orange;
-      }
-    </style>
+    <title>FileForce – API-Connected File Manager</title>
+
+    <!-- Bootstrap & Bootstrap Icons -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
   </head>
-  <body>
-    <h1>📁 FileForce API Tester</h1>
+  <body class="bg-light">
+    <div class="container py-4">
+      <h1 class="mb-4 text-center">📁 FileForce Dashboard</h1>
 
-    <h3>Upload a File</h3>
-    <input type="file" id="fileInput" />
-    <br />
-    <button onclick="testUpload()">Upload File</button>
+      <!-- Upload section -->
+      <div class="mb-4 d-flex align-items-center gap-3">
+        <input type="file" id="fileInput" class="form-control w-50" />
+        <button id="uploadBtn" class="btn btn-success">Upload</button>
+      </div>
 
-    <h3>Create File Record</h3>
-    <button onclick="testCreate()">Create</button>
+      <!-- Status messages -->
+      <div id="statusArea"></div>
 
-    <h3>Read File Records</h3>
-    <button onclick="testRead()">Read</button>
+      <!-- File table -->
+      <table class="table table-striped table-hover mt-3">
+        <thead class="table-dark">
+          <tr>
+            <th scope="col">Filename</th>
+            <th scope="col">Type</th>
+            <th scope="col">Uploaded</th>
+            <th scope="col">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="fileTableBody"></tbody>
+      </table>
+    </div>
 
-    <h3>Update File Name (id=1)</h3>
-    <button onclick="testUpdate()">Update</button>
-
-    <h3>Delete File (id=1)</h3>
-    <button onclick="testDelete()">Delete</button>
-
-    <h3>Download or View File (id=1)</h3>
-    <button onclick="testDownload(true)">Download</button>
-    <button onclick="testDownload(false)">View in Tab</button>
-
-    <div id="output"><strong>Results:</strong></div>
-
+    <!-- JS scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="app.js"></script>
+    <script src="main.js"></script>
+
+    <!-- Upload logic hookup -->
+    <script>
+      document
+        .getElementById("uploadBtn")
+        .addEventListener("click", async () => {
+          const input = document.getElementById("fileInput");
+          const result = await uploadFile(input);
+          const statusArea = document.getElementById("statusArea");
+
+          const badge = document.createElement("div");
+          badge.textContent = result.message;
+          badge.className = `alert alert-${result.status} mb-2`;
+          statusArea.appendChild(badge);
+          setTimeout(() => badge.remove(), 5000);
+
+          // Refresh file list after upload
+          const updatedFiles = await fetchAllFiles();
+          const tableBody = document.getElementById("fileTableBody");
+          tableBody.innerHTML = "";
+
+          updatedFiles.forEach((file) => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+          <td>${file.name}</td>
+          <td>${file.type.toUpperCase()}</td>
+          <td>${file.created_at}</td>
+          <td>
+            <button class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="tooltip" title="Download"
+              onclick="handleDownload(${file.id})">
+              <i class="bi bi-download"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-secondary me-1" data-bs-toggle="tooltip" title="View"
+              onclick="handleView(${file.id})">
+              <i class="bi bi-eye"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-danger" data-bs-toggle="tooltip" title="Delete"
+              onclick="handleDelete(${file.id})">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
+        `;
+            tableBody.appendChild(row);
+          });
+        });
+    </script>
   </body>
 </html>
