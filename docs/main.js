@@ -1,11 +1,10 @@
-// brr
+// main.js
 document.addEventListener("DOMContentLoaded", async () => {
   const tableBody = document.getElementById("fileTableBody");
-  const statusArea = document.getElementById("statusArea");
 
   const allFiles = await fetchAllFiles();
-  const dropZone = document.getElementById("dropZone");
 
+  const dropZone = document.getElementById("dropZone");
   dropZone.addEventListener("dragover", (e) => {
     e.preventDefault();
     dropZone.classList.add("border-success");
@@ -21,8 +20,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const files = e.dataTransfer.files;
     if (files.length > 0) {
-      const result = await uploadFile({ files });
-      //showStatus(result.message, result.status);
+      await uploadFile({ files });
       showStatus("File uploaded successfully", "success");
 
       const updatedFiles = await fetchAllFiles();
@@ -32,31 +30,19 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   document.getElementById("uploadBtn").addEventListener("click", async () => {
     const input = document.getElementById("fileInput");
-    const result = await uploadFile(input);
-    //showStatus(result.message, result.status);
+    await uploadFile({ files: input.files });
     showStatus("File uploaded successfully", "success");
 
     const updatedFiles = await fetchAllFiles();
     renderTable(updatedFiles);
   });
 
-  // Utility: Badge renderer
-  // function showStatus(message, type = "info") {
-  //   const badge = document.createElement("div");
-  //   badge.textContent = message;
-  //   badge.className = `alert alert-${type} mb-2`;
-  //   statusArea.appendChild(badge);
-  //   setTimeout(() => badge.remove(), 5000);
-  // }
   function showStatus(message, type = "info") {
     const box = document.getElementById("statusBox");
     box.textContent = message;
-
-    // Optional: soft styling
     box.className = `small ms-3 text-${type}`;
   }
 
-  // Utility: Tooltip initializer
   function activateTooltips() {
     const tooltipTriggerList = [].slice.call(
       document.querySelectorAll('[data-bs-toggle="tooltip"]')
@@ -64,14 +50,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     tooltipTriggerList.forEach((el) => new bootstrap.Tooltip(el));
   }
 
-  // Render table rows
   function renderTable(files) {
     tableBody.innerHTML = "";
+
     files.forEach((file) => {
       const row = document.createElement("tr");
-
       row.innerHTML = `
-        <td>${file.name}</td>
+        <td>
+          <span class="filename-text" data-id="${
+            file.id
+          }" style="cursor:pointer;">${file.name}</span>
+        </td>
         <td>${file.type.toUpperCase()}</td>
         <td>${file.created_at}</td>
         <td>
@@ -91,27 +80,60 @@ document.addEventListener("DOMContentLoaded", async () => {
       `;
       tableBody.appendChild(row);
     });
+
     activateTooltips();
+
+    // Attach rename listeners to filename spans
+    document.querySelectorAll(".filename-text").forEach((el) => {
+      el.addEventListener("click", () => {
+        const id = el.getAttribute("data-id");
+        const currentName = el.textContent;
+
+        const input = document.createElement("input");
+        input.type = "text";
+        input.value = currentName;
+        input.className = "form-control form-control-sm";
+        input.style.maxWidth = "200px";
+
+        el.replaceWith(input);
+        input.focus();
+
+        input.addEventListener("keydown", async (e) => {
+          if (e.key === "Enter") {
+            const newName = input.value.trim();
+            if (newName && newName !== currentName) {
+              await renameFile(id, newName);
+              showStatus("File renamed successfully", "success");
+
+              const updatedFiles = await fetchAllFiles();
+              renderTable(updatedFiles);
+            } else {
+              input.replaceWith(el);
+            }
+          }
+          if (e.key === "Escape") {
+            input.replaceWith(el);
+          }
+        });
+      });
+    });
   }
 
-  // Action handlers
+  // Handlers
   window.handleDownload = async (id) => {
-    const result = await downloadFile(id);
-    //showStatus(result.message, result.status);
-    showStatus("File downloaded started", "success");
+    await downloadFile(id);
+    showStatus("File download started", "info");
   };
 
   window.handleView = async (id) => {
-    const result = await viewFile(id);
-    //showStatus(result.message, result.status);
-    showStatus("File viewed successfully", "success");
+    await viewFile(id);
+    showStatus("File viewed successfully", "info");
   };
 
   window.handleDelete = async (id) => {
-    const result = await deleteFile(id);
-    //showStatus(result.message, result.status);
+    await deleteFile(id);
     showStatus("File deleted successfully", "success");
-    // Refresh table
+
     const updatedFiles = await fetchAllFiles();
     renderTable(updatedFiles);
   };

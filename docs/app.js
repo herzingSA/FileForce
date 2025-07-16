@@ -1,4 +1,4 @@
-// brr
+// brr app.js
 const API_URL = "https://quanttrain.com/herzing/Hapi.php";
 
 // Generic API request handler
@@ -116,6 +116,35 @@ async function uploadFile(fileInput) {
     return { status: "success", message: `Upload successful: ${file.name}` };
   } catch (error) {
     return { status: "error", message: `Upload failed: ${error.message}` };
+  }
+}
+
+// async function renameFile(fileId, newName) {
+//   try {
+//     const body = JSON.stringify({ id: fileId, name: newName });
+//     const { response } = await apiRequest("rename", "POST", body);
+//     const result = await response.json();
+//     if (result.error) throw new Error(result.error);
+//     return { status: "success", message: "file renamed ok" };
+//   } catch (error) {
+//     console.error("Rename failed:", error.message);
+//     return { status: "error", message: "rename failed" };
+//   }
+// }
+
+async function renameFile(fileId, newName) {
+  try {
+    const body = JSON.stringify({ name: newName, type: "txt" }); // Use actual type if known
+    const query = `id=${fileId}`;
+
+    const { response } = await apiRequest("update", "POST", body, query);
+    const result = await response.json();
+
+    if (result.error) throw new Error(result.error);
+    return { status: "success", message: "file renamed ok" };
+  } catch (error) {
+    console.error("Rename failed:", error.message);
+    return { status: "error", message: "rename failed" };
   }
 }
 
