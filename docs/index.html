@@ -62,6 +62,7 @@
           setTimeout(() => badge.remove(), 5000);
 
           // Refresh file list after upload
+          // brr
           const updatedFiles = await fetchAllFiles();
           const tableBody = document.getElementById("fileTableBody");
           tableBody.innerHTML = "";
