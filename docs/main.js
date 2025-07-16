@@ -3,13 +3,62 @@ document.addEventListener("DOMContentLoaded", async () => {
   const statusBox = document.getElementById("statusBox");
   const dropZone = document.getElementById("dropZone");
 
-  // Show status inline
+  // 🧩 Minimalist status feedback
   function showStatus(message, type = "info") {
     statusBox.textContent = message;
     statusBox.className = `small ms-3 text-${type}`;
   }
 
-  // Initialize Bootstrap tooltips
+  // 🧠 Create filename span for reuse
+  function createFilenameSpan(id, name) {
+    const span = document.createElement("span");
+    span.className = "filename-text";
+    span.setAttribute("data-id", id);
+    span.setAttribute("data-bs-toggle", "tooltip");
+    span.setAttribute("title", "Click to Rename");
+    span.style.cursor = "pointer";
+    span.innerHTML = `<i class="bi bi-pencil-fill me-1 text-muted"></i> ${name}`;
+
+    span.addEventListener("click", () => enableRename(span));
+    return span;
+  }
+
+  // 📝 Inline rename logic
+  function enableRename(spanEl) {
+    const id = spanEl.getAttribute("data-id");
+    const currentName = spanEl.textContent.trim();
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.value = currentName;
+    input.className = "form-control form-control-sm";
+    input.style.maxWidth = "200px";
+
+    spanEl.replaceWith(input);
+    input.focus();
+
+    input.addEventListener("keydown", async (e) => {
+      if (e.key === "Enter") {
+        const newName = input.value.trim();
+        if (newName && newName !== currentName) {
+          await renameFile(id, newName);
+          showStatus("File renamed successfully", "success");
+
+          const updatedFiles = await fetchAllFiles();
+          renderTable(updatedFiles);
+        } else {
+          input.replaceWith(createFilenameSpan(id, currentName));
+          activateTooltips();
+        }
+      }
+      if (e.key === "Escape") {
+        input.replaceWith(createFilenameSpan(id, currentName));
+        activateTooltips();
+      }
+    });
+  }
+
+  // 🧠 Enable tooltips
   function activateTooltips() {
     const tooltipTriggerList = [].slice.call(
       document.querySelectorAll('[data-bs-toggle="tooltip"]')
@@ -17,24 +66,20 @@ document.addEventListener("DOMContentLoaded", async () => {
     tooltipTriggerList.forEach((el) => new bootstrap.Tooltip(el));
   }
 
-  // Render file table
+  // 🧩 Render file table
   function renderTable(files) {
     tableBody.innerHTML = "";
 
     files.forEach((file) => {
       const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>
-          <span
-            class="filename-text"
-            data-id="${file.id}"
-            data-bs-toggle="tooltip"
-            title="Click to Rename"
-            style="cursor:pointer;"
-          >
-            <i class="bi bi-pencil-fill me-1 text-muted"></i> ${file.name}
-          </span>
-        </td>
+
+      const filenameCell = document.createElement("td");
+      const filenameSpan = createFilenameSpan(file.id, file.name);
+      filenameCell.appendChild(filenameSpan);
+
+      row.appendChild(filenameCell);
+
+      row.innerHTML += `
         <td>${file.type.toUpperCase()}</td>
         <td>${file.created_at}</td>
         <td>
@@ -52,49 +97,14 @@ document.addEventListener("DOMContentLoaded", async () => {
           </button>
         </td>
       `;
+
       tableBody.appendChild(row);
     });
 
     activateTooltips();
-
-    // Inline rename setup
-    document.querySelectorAll(".filename-text").forEach((el) => {
-      el.addEventListener("click", () => {
-        const id = el.getAttribute("data-id");
-        const currentName = el.textContent.trim();
-
-        const input = document.createElement("input");
-        input.type = "text";
-        input.value = currentName;
-        input.className = "form-control form-control-sm";
-        input.style.maxWidth = "200px";
-
-        el.replaceWith(input);
-        input.focus();
-
-        input.addEventListener("keydown", async (e) => {
-          if (e.key === "Enter") {
-            const newName = input.value.trim();
-            if (newName && newName !== currentName) {
-              await renameFile(id, newName);
-              showStatus("File renamed successfully", "success");
-
-              const updatedFiles = await fetchAllFiles();
-              renderTable(updatedFiles);
-            } else {
-              input.replaceWith(el);
-            }
-          }
-
-          if (e.key === "Escape") {
-            input.replaceWith(el);
-          }
-        });
-      });
-    });
   }
 
-  // Drag & drop logic
+  // 🖱️ Drag & Drop handling
   dropZone.addEventListener("dragover", (e) => {
     e.preventDefault();
     dropZone.classList.add("border-success");
@@ -118,7 +128,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // Upload button
+  // ✅ Upload button
   document.getElementById("uploadBtn").addEventListener("click", async () => {
     const input = document.getElementById("fileInput");
     await uploadFile({ files: input.files });
@@ -128,19 +138,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderTable(updatedFiles);
   });
 
-  // Download
+  // 📥 Action handlers
   window.handleDownload = async (id) => {
     await downloadFile(id);
     showStatus("File download started", "info");
   };
 
-  // View
   window.handleView = async (id) => {
     await viewFile(id);
     showStatus("File viewed successfully", "info");
   };
 
-  // Delete confirmation modal logic
+  // 🗑️ Delete confirmation modal
   let pendingDeleteId = null;
 
   window.handleDelete = async (id) => {
@@ -167,7 +176,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       bootstrap.Modal.getInstance(modalEl)?.hide();
     });
 
-  // Initial render
+  // 🌐 Initial load
   const allFiles = await fetchAllFiles();
   renderTable(allFiles);
 });
