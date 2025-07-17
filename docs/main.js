@@ -3,82 +3,44 @@ document.addEventListener("DOMContentLoaded", async () => {
   const statusBox = document.getElementById("statusBox");
   const dropZone = document.getElementById("dropZone");
 
-  // 🧩 Minimalist status feedback
+  let pendingDeleteId = null;
+  let pendingRenameId = null;
+  let pendingRenameType = null;
+
+  // 💬 Display status next to Upload button
   function showStatus(message, type = "info") {
     statusBox.textContent = message;
     statusBox.className = `small ms-3 text-${type}`;
   }
 
-  // 🧠 Create filename span for reuse
-  function createFilenameSpan(id, name) {
-    const span = document.createElement("span");
-    span.className = "filename-text";
-    span.setAttribute("data-id", id);
-    span.setAttribute("data-bs-toggle", "tooltip");
-    span.setAttribute("title", "Click to Rename");
-    span.style.cursor = "pointer";
-    span.innerHTML = `<i class="bi bi-pencil-fill me-1 text-muted"></i> ${name}`;
-
-    span.addEventListener("click", () => enableRename(span));
-    return span;
-  }
-
-  // ✏️ Inline rename logic
-  function enableRename(spanEl) {
-    const id = spanEl.getAttribute("data-id");
-    const currentName = spanEl.textContent.trim();
-
-    const input = document.createElement("input");
-    input.type = "text";
-    input.value = currentName;
-    input.className = "form-control form-control-sm";
-    input.style.maxWidth = "200px";
-
-    spanEl.replaceWith(input);
-    input.focus();
-
-    input.addEventListener("keydown", async (e) => {
-      if (e.key === "Enter") {
-        const newName = input.value.trim();
-        if (newName && newName !== currentName) {
-          await renameFile(id, newName);
-          showStatus("File renamed successfully", "success");
-
-          const newSpan = createFilenameSpan(id, newName);
-          input.replaceWith(newSpan);
-          activateTooltips();
-        } else {
-          input.replaceWith(createFilenameSpan(id, currentName));
-          activateTooltips();
-        }
-      }
-      if (e.key === "Escape") {
-        input.replaceWith(createFilenameSpan(id, currentName));
-        activateTooltips();
-      }
-    });
-
-    input.addEventListener("blur", () => {
-      input.replaceWith(createFilenameSpan(id, currentName));
-      activateTooltips();
-    });
-  }
-
-  // 🌿 Initialize tooltips
+  // 🎯 Activate Bootstrap tooltips
   function activateTooltips() {
-    const triggers = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-    triggers.forEach((el) => new bootstrap.Tooltip(el));
+    const tooltipTriggerList = [].slice.call(
+      document.querySelectorAll('[data-bs-toggle="tooltip"]')
+    );
+    tooltipTriggerList.forEach((el) => new bootstrap.Tooltip(el));
   }
 
-  // 🧩 Table renderer
+  // 📋 Render file table
   function renderTable(files) {
     tableBody.innerHTML = "";
 
     files.forEach((file) => {
       const row = document.createElement("tr");
 
+      // Filename cell with pencil icon and modal trigger
       const filenameCell = document.createElement("td");
-      filenameCell.appendChild(createFilenameSpan(file.id, file.name));
+      filenameCell.innerHTML = `
+        <span
+          style="cursor:pointer;"
+          class="filename-text"
+          data-bs-toggle="tooltip"
+          title="Click to Rename"
+          onclick="handleRename(${file.id}, '${file.name}', '${file.type}')"
+        >
+          <i class="bi bi-pencil-fill me-1 text-muted"></i> ${file.name}
+        </span>
+      `;
 
       const typeCell = document.createElement("td");
       typeCell.textContent = file.type.toUpperCase();
@@ -101,6 +63,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           <i class="bi bi-trash"></i>
         </button>
       `;
+
       row.appendChild(filenameCell);
       row.appendChild(typeCell);
       row.appendChild(dateCell);
@@ -112,54 +75,49 @@ document.addEventListener("DOMContentLoaded", async () => {
     activateTooltips();
   }
 
-  // 🖱️ Drag & drop
-  dropZone.addEventListener("dragover", (e) => {
-    e.preventDefault();
-    dropZone.classList.add("border-success");
-  });
+  // 📝 Rename via modal
+  window.handleRename = (id, currentName, type) => {
+    pendingRenameId = id;
+    pendingRenameType = type;
+    document.getElementById("renameInput").value = currentName;
 
-  dropZone.addEventListener("dragleave", () => {
-    dropZone.classList.remove("border-success");
-  });
+    const modal = new bootstrap.Modal(document.getElementById("renameModal"));
+    modal.show();
+  };
 
-  dropZone.addEventListener("drop", async (e) => {
-    e.preventDefault();
-    dropZone.classList.remove("border-success");
+  document
+    .getElementById("renameConfirmBtn")
+    .addEventListener("click", async () => {
+      const input = document.getElementById("renameInput");
+      const newName = input.value.trim();
 
-    const files = e.dataTransfer.files;
-    if (files.length > 0) {
-      await uploadFile({ files });
-      showStatus("File uploaded successfully", "success");
+      if (newName && pendingRenameId !== null) {
+        await renameFile(pendingRenameId, newName, pendingRenameType);
+        showStatus("File renamed successfully", "success");
 
-      const updatedFiles = await fetchAllFiles();
-      renderTable(updatedFiles);
-    }
-  });
+        const updatedFiles = await fetchAllFiles();
+        renderTable(updatedFiles);
+      }
 
-  // ✅ Upload button
-  document.getElementById("uploadBtn").addEventListener("click", async () => {
-    const input = document.getElementById("fileInput");
-    await uploadFile({ files: input.files });
-    showStatus("File uploaded successfully", "success");
+      bootstrap.Modal.getInstance(
+        document.getElementById("renameModal")
+      )?.hide();
+      pendingRenameId = null;
+    });
 
-    const updatedFiles = await fetchAllFiles();
-    renderTable(updatedFiles);
-  });
-
-  // 📥 File actions
+  // ⬇️ Download
   window.handleDownload = async (id) => {
     await downloadFile(id);
     showStatus("File download started", "info");
   };
 
+  // 👁️ View
   window.handleView = async (id) => {
     await viewFile(id);
     showStatus("File viewed successfully", "info");
   };
 
   // 🗑️ Delete modal logic
-  let pendingDeleteId = null;
-
   window.handleDelete = async (id) => {
     pendingDeleteId = id;
     const modal = new bootstrap.Modal(
@@ -184,7 +142,41 @@ document.addEventListener("DOMContentLoaded", async () => {
       bootstrap.Modal.getInstance(modalEl)?.hide();
     });
 
-  // Initial load
+  // 🖱️ Drag & Drop support
+  dropZone.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    dropZone.classList.add("border-success");
+  });
+
+  dropZone.addEventListener("dragleave", () => {
+    dropZone.classList.remove("border-success");
+  });
+
+  dropZone.addEventListener("drop", async (e) => {
+    e.preventDefault();
+    dropZone.classList.remove("border-success");
+
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      await uploadFile({ files });
+      showStatus("File uploaded successfully", "success");
+
+      const updatedFiles = await fetchAllFiles();
+      renderTable(updatedFiles);
+    }
+  });
+
+  // 🟢 Upload via button
+  document.getElementById("uploadBtn").addEventListener("click", async () => {
+    const input = document.getElementById("fileInput");
+    await uploadFile({ files: input.files });
+    showStatus("File uploaded successfully", "success");
+
+    const updatedFiles = await fetchAllFiles();
+    renderTable(updatedFiles);
+  });
+
+  // 🚀 Initial render
   const allFiles = await fetchAllFiles();
   renderTable(allFiles);
 });
