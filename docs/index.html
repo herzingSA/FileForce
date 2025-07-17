@@ -2,71 +2,48 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>FileForce – API-Connected File Manager</title>
-
-    <!-- Bootstrap & Icons -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FileForce Dashboard</title>
+    <!-- Bootstrap CSS -->
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
       rel="stylesheet"
+      integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM"
+      crossorigin="anonymous"
     />
+    <!-- Bootstrap Icons -->
     <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css"
       rel="stylesheet"
     />
-    <style>
-      th.sortable {
-        cursor: pointer;
-        user-select: none;
-      }
-      th.sortable:hover {
-        text-decoration: underline;
-      }
-    </style>
   </head>
-  <body class="bg-light">
-    <div class="container py-4">
-      <h1 class="mb-4 text-center">📁 FileForce Dashboard</h1>
+  <body>
+    <div class="container my-5">
+      <h1 class="mb-4">📁 FileForce Dashboard</h1>
 
-      <!-- Drag & Drop Upload Zone -->
-      <div
-        id="dropZone"
-        class="border border-primary rounded p-4 mb-3 text-center bg-light text-muted"
-      >
-        <p class="mb-1">🖱️ Drag & Drop a file here</p>
-        <p class="small">
-          or Browse and <strong>Upload</strong> from the button below
-        </p>
+      <div class="card mb-4">
+        <div class="card-body text-center" id="dropZone">
+          <p class="card-text">🖱️ Drag & Drop a file here</p>
+          <p class="card-text">or Browse and Upload from the button below</p>
+          <input type="file" id="fileInput" class="d-none" />
+        </div>
       </div>
 
-      <!-- Upload section -->
-      <div class="mb-4 d-flex align-items-center gap-3">
-        <input type="file" id="fileInput" class="form-control w-50" />
-        <button id="uploadBtn" class="btn btn-success">Upload</button>
-        <div
-          id="statusBox"
-          class="small text-muted ms-3"
-          style="min-width: 150px"
-        ></div>
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div id="statusBox" class="small ms-3"></div>
+        <button class="btn btn-primary" id="uploadBtn">Upload</button>
       </div>
 
-      <!-- File Table -->
-      <table class="table table-striped table-hover mt-3">
-        <thead class="table-dark">
-          <!-- <tr>
-            <th scope="col" id="sort-filename" class="sortable">Filename ▲</th>
-            <th scope="col" id="sort-type" class="sortable">Type ▲</th>
-            <th scope="col" id="sort-date" class="sortable">Uploaded ▲</th>
-            <th scope="col">Actions</th>
-          </tr> -->
-
+      <table class="table table-hover">
+        <thead>
           <tr>
-            <th scope="col" id="sort-filename" class="sortable">
+            <th scope="col" id="sort-filename" style="cursor: pointer">
               ↑↓ Filename <span class="sort-arrow"></span>
             </th>
-            <th scope="col" id="sort-type" class="sortable">
+            <th scope="col" id="sort-type" style="cursor: pointer">
               ↑↓ Type <span class="sort-arrow"></span>
             </th>
-            <th scope="col" id="sort-date" class="sortable">
+            <th scope="col" id="sort-date" style="cursor: pointer">
               ↑↓ Uploaded <span class="sort-arrow"></span>
             </th>
             <th scope="col">Actions</th>
@@ -75,24 +52,25 @@
         <tbody id="fileTableBody"></tbody>
       </table>
 
-      <!-- Delete Modal -->
+      <!-- Delete Confirmation Modal -->
       <div
         class="modal fade"
         id="confirmDeleteModal"
         tabindex="-1"
-        aria-labelledby="confirmDeleteLabel"
+        aria-labelledby="confirmDeleteModalLabel"
         aria-hidden="true"
       >
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog">
           <div class="modal-content">
             <div class="modal-header">
-              <h5 class="modal-title" id="confirmDeleteLabel">
+              <h5 class="modal-title" id="confirmDeleteModalLabel">
                 Confirm File Deletion
               </h5>
               <button
                 type="button"
                 class="btn-close"
                 data-bs-dismiss="modal"
+                aria-label="Close"
               ></button>
             </div>
             <div class="modal-body">
@@ -108,9 +86,9 @@
                 Cancel
               </button>
               <button
-                id="confirmDeleteBtn"
                 type="button"
                 class="btn btn-danger"
+                id="confirmDeleteBtn"
               >
                 Delete
               </button>
@@ -127,7 +105,7 @@
         aria-labelledby="renameModalLabel"
         aria-hidden="true"
       >
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog">
           <div class="modal-content">
             <div class="modal-header">
               <h5 class="modal-title" id="renameModalLabel">Rename File</h5>
@@ -135,10 +113,16 @@
                 type="button"
                 class="btn-close"
                 data-bs-dismiss="modal"
+                aria-label="Close"
               ></button>
             </div>
             <div class="modal-body">
-              <input type="text" id="renameInput" class="form-control" />
+              <input
+                type="text"
+                class="form-control"
+                id="renameInput"
+                placeholder="Enter new filename"
+              />
             </div>
             <div class="modal-footer">
               <button
@@ -149,9 +133,9 @@
                 Cancel
               </button>
               <button
-                id="renameConfirmBtn"
                 type="button"
                 class="btn btn-primary"
+                id="renameConfirmBtn"
               >
                 Save
               </button>
@@ -161,10 +145,14 @@
       </div>
     </div>
 
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz"
+      crossorigin="anonymous"
+    ></script>
+    <!-- Application Scripts -->
     <script src="app.js"></script>
     <script src="main.js"></script>
-    <script src="viewWatchdog.js"></script>
   </body>
 </html>

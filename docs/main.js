@@ -10,6 +10,35 @@ document.addEventListener("DOMContentLoaded", async () => {
   let sortField = null;
   let sortDirection = "asc"; // "asc" or "desc"
 
+  // List of viewable MIME types
+  const viewableTypes = [
+    // Images
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "image/webp",
+    "image/svg+xml",
+    // Documents & text
+    "application/pdf",
+    "text/plain",
+    "text/html",
+    "text/css",
+    "application/json",
+    "application/xml",
+    "text/xml",
+    "application/javascript",
+    "text/markdown",
+    // Audio
+    "audio/mpeg",
+    "audio/ogg",
+    "audio/wav",
+    "audio/webm",
+    // Video
+    "video/mp4",
+    "video/webm",
+    "video/ogg",
+  ];
+
   function showStatus(message, type = "info") {
     statusBox.textContent = message;
     statusBox.className = `small ms-3 text-${type}`;
@@ -17,7 +46,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   function activateTooltips() {
     const triggers = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-    triggers.forEach((el) => new bootstrap.Tooltip(el));
+    triggers.forEach((el) => {
+      // Dispose of existing tooltip to prevent duplicates
+      const existing = bootstrap.Tooltip.getInstance(el);
+      if (existing) existing.dispose();
+      new bootstrap.Tooltip(el);
+    });
   }
 
   function sortFiles(files) {
@@ -92,6 +126,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       const dateCell = document.createElement("td");
       dateCell.textContent = file.created_at;
 
+      // Determine tooltip text based on MIME type
+      const mime = file.type.toLowerCase();
+      const isViewable = viewableTypes.includes(mime);
+      const viewTooltip = isViewable
+        ? "View"
+        : "Not a viewable filetype – try download instead";
+
       const actionsCell = document.createElement("td");
       actionsCell.innerHTML = `
         <button class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="tooltip" title="Download"
@@ -99,7 +140,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           <i class="bi bi-download"></i>
         </button>
 
-        <button class="btn btn-sm btn-outline-secondary me-1" data-bs-toggle="tooltip" title="View" data-mime="${file.type}"
+        <button class="btn btn-sm btn-outline-secondary me-1" data-bs-toggle="tooltip" title="${viewTooltip}" data-mime="${file.type}"
           onclick="handleView(${file.id})">
           <i class="bi bi-eye"></i>
         </button>
@@ -108,7 +149,6 @@ document.addEventListener("DOMContentLoaded", async () => {
           onclick="handleDelete(${file.id})">
           <i class="bi bi-trash"></i>
         </button>
-
       `;
 
       row.appendChild(filenameCell);
@@ -225,7 +265,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderTable(updatedFiles);
   });
 
-  // 🔃 Sorting header event bindings
   document
     .getElementById("sort-filename")
     .addEventListener("click", () => toggleSort("name"));
