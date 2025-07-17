@@ -2,7 +2,7 @@ document.addEventListener("mouseover", (e) => {
   const btn = e.target.closest(".btn-outline-secondary[data-mime]");
   if (!btn) return;
 
-  const mime = btn.dataset.mime?.toLowerCase() || "";
+  const mime = btn.dataset.mime ? btn.dataset.mime.toLowerCase() : "";
 
   const viewableTypes = new Set([
     // Images
@@ -35,18 +35,10 @@ document.addEventListener("mouseover", (e) => {
     "video/ogg",
   ]);
 
-  const isViewable = viewableTypes.has(mime);
-
+  const isViewable = viewableTypes.has(mime); // Use has instead of includes
   const tooltipText = isViewable
     ? "View"
     : "Not a viewable filetype – try download";
 
-  // Update native title
   btn.setAttribute("title", tooltipText);
-
-  // Sync with Bootstrap tooltip instance
-  const tooltipInstance = bootstrap.Tooltip.getInstance(btn);
-  if (tooltipInstance) {
-    tooltipInstance.setContent({ ".tooltip-inner": tooltipText });
-  }
 });
