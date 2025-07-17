@@ -98,14 +98,17 @@ document.addEventListener("DOMContentLoaded", async () => {
           onclick="handleDownload(${file.id})">
           <i class="bi bi-download"></i>
         </button>
-        <button class="btn btn-sm btn-outline-secondary me-1" data-bs-toggle="tooltip" title="View"
+
+        <button class="btn btn-sm btn-outline-secondary me-1" data-bs-toggle="tooltip" title="View" data-mime="${file.type}"
           onclick="handleView(${file.id})">
           <i class="bi bi-eye"></i>
         </button>
+
         <button class="btn btn-sm btn-outline-danger" data-bs-toggle="tooltip" title="Delete"
           onclick="handleDelete(${file.id})">
           <i class="bi bi-trash"></i>
         </button>
+
       `;
 
       row.appendChild(filenameCell);
