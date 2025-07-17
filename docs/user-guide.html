@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FileForce – User Guide</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        background-color: #f9f9f9;
+      }
+      .accordion-button::after {
+        transition: transform 0.2s ease-in-out;
+      }
+      .accordion-button.collapsed::after {
+        transform: rotate(-90deg);
+      }
+      .screenshot-preview {
+        max-width: 100%;
+        border: 1px solid #ccc;
+        border-radius: 0.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container py-5">
+      <h1 class="mb-4">📁 FileForce: User Guide</h1>
+      <p class="lead">
+        A minimalist web-based file manager built for elegance, clarity, and
+        control—right from your browser.
+      </p>
+
+      <div class="accordion" id="userGuideAccordion">
+        <!-- Getting Started -->
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="headingStart">
+            <button
+              class="accordion-button"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#collapseStart"
+              aria-expanded="true"
+              aria-controls="collapseStart"
+            >
+              🚀 Getting Started
+            </button>
+          </h2>
+          <div
+            id="collapseStart"
+            class="accordion-collapse collapse show"
+            aria-labelledby="headingStart"
+            data-bs-parent="#userGuideAccordion"
+          >
+            <div class="accordion-body">
+              <ol>
+                <li>
+                  Visit
+                  <a
+                    href="https://herzingsa.github.io/FileForce/"
+                    target="_blank"
+                    >FileForce</a
+                  >
+                </li>
+                <li>
+                  Drag and drop files or use the <strong>Upload</strong> button
+                </li>
+                <li>
+                  Manage your files using intuitive actions and sort options
+                </li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+        <!-- File Actions -->
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="headingActions">
+            <button
+              class="accordion-button collapsed"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#collapseActions"
+              aria-expanded="false"
+              aria-controls="collapseActions"
+            >
+              📦 File Management Actions
+            </button>
+          </h2>
+          <div
+            id="collapseActions"
+            class="accordion-collapse collapse"
+            aria-labelledby="headingActions"
+            data-bs-parent="#userGuideAccordion"
+          >
+            <div class="accordion-body">
+              <ul>
+                <li>
+                  <strong>📄 Filename:</strong> Click to rename inline via modal
+                </li>
+                <li>
+                  <strong>📂 Type:</strong> MIME type display and sortable
+                </li>
+                <li><strong>📅 Uploaded Date:</strong> Sortable timestamp</li>
+                <li>
+                  <strong>⚙️ Actions:</strong>
+                  <ul>
+                    <li><strong>Download:</strong> Save to device</li>
+                    <li>
+                      <strong>View:</strong> Opens in-browser if supported;
+                      otherwise auto-downloads
+                    </li>
+                    <li>
+                      <strong>Delete:</strong> Removes file after confirmation
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sorting -->
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="headingSorting">
+            <button
+              class="accordion-button collapsed"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#collapseSorting"
+              aria-expanded="false"
+              aria-controls="collapseSorting"
+            >
+              📊 Sorting & Navigation
+            </button>
+          </h2>
+          <div
+            id="collapseSorting"
+            class="accordion-collapse collapse"
+            aria-labelledby="headingSorting"
+            data-bs-parent="#userGuideAccordion"
+          >
+            <div class="accordion-body">
+              <p>
+                Click any column header to sort by filename, type, or uploaded
+                date. Sort direction toggles (ascending/descending) with visible
+                arrow indicators.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Supported MIME -->
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="headingMime">
+            <button
+              class="accordion-button collapsed"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#collapseMime"
+              aria-expanded="false"
+              aria-controls="collapseMime"
+            >
+              🖼️ Supported File Formats: ALL
+            </button>
+          </h2>
+          <div
+            id="collapseMime"
+            class="accordion-collapse collapse"
+            aria-labelledby="headingMime"
+            data-bs-parent="#userGuideAccordion"
+          >
+            <div class="accordion-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <h6>🖼️ Images</h6>
+                  <ul class="mb-3">
+                    <li>.jpg, .jpeg, .png, .gif, .webp, .svg</li>
+                  </ul>
+                  <h6>📄 Documents & Text</h6>
+                  <ul class="mb-3">
+                    <li>.pdf, .txt, .html, .css, .js, .json, .xml, .md</li>
+                  </ul>
+                </div>
+                <div class="col-md-6">
+                  <h6>🔊 Audio</h6>
+                  <ul class="mb-3">
+                    <li>.mp3, .ogg, .wav, .webm</li>
+                  </ul>
+                  <h6>🎬 Video</h6>
+                  <ul class="mb-3">
+                    <li>.mp4, .webm, .ogg</li>
+                  </ul>
+                </div>
+              </div>
+              <p class="mt-2">
+                The above MIME-compatible filetypes may be viewed in-browser on
+                most Blink/Gecko class browsers. Non-MIME file formats (e.g.,
+                .zip, .docx) will automatically trigger a download when the
+                <strong>View</strong> button is clicked.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Screenshot -->
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="headingScreenshot">
+            <button
+              class="accordion-button collapsed"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#collapseScreenshot"
+              aria-expanded="false"
+              aria-controls="collapseScreenshot"
+            >
+              🖼️ Interface Preview
+            </button>
+          </h2>
+          <div
+            id="collapseScreenshot"
+            class="accordion-collapse collapse"
+            aria-labelledby="headingScreenshot"
+            data-bs-parent="#userGuideAccordion"
+          >
+            <div class="accordion-body text-center">
+              <p><strong>FileForce screenshot</strong></p>
+              <img
+                src="img/fileforce-preview.png"
+                alt="FileForce screenshot"
+                class="screenshot-preview"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

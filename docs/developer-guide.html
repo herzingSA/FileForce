@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FileForce – Developer Guide</title>
+
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+
+    <!-- Mermaid.js -->
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({ startOnLoad: true });
+    </script>
+
+    <style>
+      body {
+        background-color: #fdfdfd;
+      }
+      .accordion-button::after {
+        transition: transform 0.2s ease-in-out;
+      }
+      .accordion-button.collapsed::after {
+        transform: rotate(-90deg);
+      }
+      .mermaid {
+        background: #f0f0f0;
+        padding: 1rem;
+        border-radius: 0.5rem;
+      }
+      pre {
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        overflow-x: auto;
+      }
+    </style>
+  </head>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <body>
+    <div class="container py-5">
+      <h1 class="mb-4">🛠️ FileForce: Developer Guide</h1>
+      <p class="lead">
+        A technical walkthrough of the architecture, API workflow, and rendering
+        logic behind FileForce’s frontend and backend integration.
+      </p>
+
+      <div class="accordion" id="devGuideAccordion">
+        <!-- Setup & Deployment -->
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="headingSetup">
+            <button
+              class="accordion-button"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#collapseSetup"
+              aria-expanded="true"
+              aria-controls="collapseSetup"
+            >
+              🧱 Setup & Deployment
+            </button>
+          </h2>
+          <div
+            id="collapseSetup"
+            class="accordion-collapse collapse show"
+            aria-labelledby="headingSetup"
+            data-bs-parent="#devGuideAccordion"
+          >
+            <div class="accordion-body">
+              <ul>
+                <li>Clone the repo from GitHub</li>
+                <li>
+                  Deploy via GitHub Pages: select <strong>main</strong> branch,
+                  folder <code>/docs</code>
+                </li>
+                <li>
+                  Ensure <code>.nojekyll</code> is present to prevent GitHub
+                  Pages from ignoring files and folders like <code>img/</code>
+                </li>
+                <li>
+                  Backend hosted at
+                  <code>https://quanttrain.com/herzing/Hapi.php</code>, served
+                  via CORS
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- System Diagram -->
+
+
+<!-- API Architecture -->
+<div class="accordion-item">
+  <h2 class="accordion-header" id="headingAPI">
+    <button
+      class="accordion-button collapsed"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#collapseAPI"
+      aria-expanded="false"
+      aria-controls="collapseAPI"
+    >
+      🔌 API Architecture & Endpoint Behavior
+    </button>
+  </h2>
+  <div
+    id="collapseAPI"
+    class="accordion-collapse collapse"
+    aria-labelledby="headingAPI"
+    data-bs-parent="#devGuideAccordion"
+  >
+    <div class="accordion-body">
+      <p>
+        Code summary:
+        <ul>
+          <li><strong>index.html</strong>: Frontend UI for static layout, event hooks</li>
+          <li><strong>main.js</strong>: renders table, handles modals, responds to clicks, delegates logic</li>
+          <li><strong>app.js</strong>: abstracts API calls, handles endpoint composition</li>
+          <li><strong>Hapi.php</strong>: interprets requests, manages SQL and file I/O</li>
+        </ul>
+        <code>app.js</code> provides async wrappers around
+        <code>Hapi.php</code> (resides on a private server, connects GitHub to a private MySQL database) actions:
+      </p>
+      <ul>
+        <li><code>uploadFile()</code> → POST with <code>FormData</code></li>
+        <li><code>downloadFile()</code> → GET with <code>as_attachment=true</code></li>
+        <li><code>viewFile()</code> → GET inline download</li>
+        <li><code>renameFile()</code> → POST with JSON body</li>
+        <li><code>fetchAllFiles()</code> → GET for listing</li>
+        <li><code>deleteFile()</code> → POST with file <code>id</code></li>
+      </ul>
+
+      <!-- System Diagram -->
+      <h2 class="accordion-header" id="headingSystemDiagram">
+        <button
+          class="accordion-button collapsed"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#collapseSystemDiagram"
+          aria-expanded="false"
+          aria-controls="collapseSystemDiagram"
+        >
+          System Diagram - The overall system diagram is as follows (Click arrow on right)
+        </button>
+      </h2>
+      <div
+        id="collapseSystemDiagram"
+        class="accordion-collapse collapse"
+        aria-labelledby="headingSystemDiagram"
+        data-bs-parent="#collapseAPI"
+      >
+        <div class="accordion-body">
+          <p>
+            
+            <img
+              src="img/sysdiag.png"
+              alt="System Diagram"
+              class="screenshot-preview"
+            />
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+        <!-- Table Rendering -->
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="headingRender">
+            <button
+              class="accordion-button collapsed"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#collapseRender"
+              aria-expanded="false"
+              aria-controls="collapseRender"
+            >
+              🧮 Table Rendering & Enhancement Logic
+            </button>
+          </h2>
+          <div
+            id="collapseRender"
+            class="accordion-collapse collapse"
+            aria-labelledby="headingRender"
+            data-bs-parent="#devGuideAccordion"
+          >
+            <div class="accordion-body">
+              <p><code>main.js</code> drives dynamic rendering:</p>
+              <ul>
+                <li>
+                  Triggers on DOM load → calls <code>fetchAllFiles()</code>
+                </li>
+                <li>
+                  Sorts via <code>sortFiles()</code> using
+                  <code>sortField</code> and <code>sortDirection</code>
+                </li>
+                <li>
+                  Enhances table headers with click-to-sort + directional arrows
+                </li>
+                <li>Modal handlers for rename and delete</li>
+                <li>
+                  Bootstraps tooltips and status messaging via
+                  <code>showStatus()</code>
+                </li>
+              </ul>
+
+
+            </div>
+          </div>
+        </div>
+
+        <!-- SQL Schema -->
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="headingSQL">
+            <button
+              class="accordion-button collapsed"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#collapseSQL"
+              aria-expanded="false"
+              aria-controls="collapseSQL"
+            >
+              🗂️ Database Schema: `files` Table
+            </button>
+          </h2>
+          <div
+            id="collapseSQL"
+            class="accordion-collapse collapse"
+            aria-labelledby="headingSQL"
+            data-bs-parent="#devGuideAccordion"
+          >
+            <div class="accordion-body">
+              <p>
+                This SQL schema defines the backend table
+                <code>files</code> used by <code>Hapi.php</code> for metadata
+                storage:
+              </p>
+
+              <pre><code>CREATE TABLE `files` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `type` varchar(50) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `file_path` varchar(255) NOT NULL,
+  PRIMARY KEY (`id`)
+);</code></pre>
+
+              <p>
+                Referenced from <code>FileForce-create-table.sql</code> in the
+                <code>/docs</code> directory.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Full System Integration Diagram -->
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="headingDiagram">
+            <button
+              class="accordion-button collapsed"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#collapseDiagram"
+              aria-expanded="false"
+              aria-controls="collapseDiagram"
+            >
+              🔄 System Integration Flow
+            </button>
+          </h2>
+          <div
+            id="collapseDiagram"
+            class="accordion-collapse collapse"
+            aria-labelledby="headingDiagram"
+            data-bs-parent="#devGuideAccordion"
+          >
+            <div class="accordion-body">
+
+
+              <h3>🔄 System Integration Flow: How FileForce Operates</h3>
+
+              <p>The FileForce application integrates multiple layers to create a seamless in-browser file management system. Here’s how its components interact:</p>
+              
+              <ol>
+                  <li>
+                      <strong>User Interaction</strong><br>
+                      The user interface is presented via <code>index.html</code>, which includes a drag-and-drop upload zone, a sortable file table, and action buttons (View, Download, Delete, Rename). This page is the user’s entry point.
+                  </li>
+                  <li>
+                      <strong>main.js</strong><br>
+                      As soon as the page loads, <code>main.js</code> takes over:
+                      <ul>
+                          <li>It listens for UI events (clicks, uploads, modals)</li>
+                          <li>Triggers data fetches with <code>fetchAllFiles()</code></li>
+                          <li>Renders the file table dynamically</li>
+                          <li>Controls enhancements like sorting and inline modals</li>
+                          <li>Delegates API actions to <code>app.js</code> based on user input</li>
+                      </ul>
+                  </li>
+                  <li>
+                      <strong>app.js</strong><br>
+                      This file acts as the bridge between the frontend and backend:
+                      <ul>
+                          <li>Contains helper functions like <code>uploadFile()</code>, <code>deleteFile()</code>, and <code>renameFile()</code></li>
+                          <li>Uses <code>fetch()</code> to communicate with <code>Hapi.php</code></li>
+                          <li>Passes requests using standard GET/POST methods and manages parameters like <code>as_attachment=true</code> or JSON payloads</li>
+                      </ul>
+                  </li>
+                  <li>
+                      <strong>Hapi.php</strong><br>
+                      The backend router receives requests from <code>app.js</code> and executes server-side actions:
+                      <ul>
+                          <li>Retrieves file metadata from the MySQL database (<code>files</code> table)</li>
+                          <li>Handles physical file upload, deletion, and retrieval from the <code>/files</code> directory</li>
+                          <li>Returns results in JSON format for frontend consumption</li>
+                      </ul>
+                  </li>
+                  <li>
+                      <strong>Database + File System</strong><br>
+                      <ul>
+                          <li>Metadata (e.g., filename, MIME type, created_at) is stored in the <code>files</code> SQL table</li>
+                          <li>Actual files are saved under a server directory, typically <code>/files</code></li>
+                          <li>The PHP script synchronizes both: ensuring metadata always matches the file system</li>
+                      </ul>
+                  </li>
+                  <li>
+                      <strong>Response Cycle</strong><br>
+                      After processing, <code>Hapi.php</code> sends back a JSON payload to <code>app.js</code>, which returns it to <code>main.js</code>. The UI is then updated to reflect the result—whether that's a new file appearing, an item being renamed, or a file removed.
+                  </li>
+              </ol>
+              
+
+
+
+
+
+
+            </div>
+          </div>
+        </div>
+
+        <!-- Screenshots -->
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="headingScreenshot">
+            <button
+              class="accordion-button collapsed"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#collapseScreenshot"
+              aria-expanded="false"
+              aria-controls="collapseScreenshot"
+            >
+              🖼️ Online (private) DB Server Screenshot 
+            </button>
+          </h2>
+          <div
+            id="collapseScreenshot"
+            class="accordion-collapse collapse"
+            aria-labelledby="headingScreenshot"
+            data-bs-parent="#devGuideAccordion"
+          >
+            <div class="accordion-body text-center">
+              
+              
+              <img
+              src="img/FileForce-phpMyAdmin.png"
+              alt="System Diagram"
+              class="screenshot-preview"
+            />
+
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
