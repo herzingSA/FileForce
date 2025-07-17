@@ -2,9 +2,9 @@ document.addEventListener("mouseover", (e) => {
   const btn = e.target.closest(".btn-outline-secondary[data-mime]");
   if (!btn) return;
 
-  const mime = btn.dataset.mime ? btn.dataset.mime.toLowerCase() : "";
+  const mime = btn.dataset.mime?.toLowerCase() || "";
 
-  const viewableTypes = new Set([
+  const viewableTypes = [
     // Images
     "image/jpeg",
     "image/png",
@@ -33,9 +33,9 @@ document.addEventListener("mouseover", (e) => {
     "video/mp4",
     "video/webm",
     "video/ogg",
-  ]);
+  ];
 
-  const isViewable = viewableTypes.has(mime); // Use has instead of includes
+  const isViewable = viewableTypes.includes(mime);
   const tooltipText = isViewable
     ? "View"
     : "Not a viewable filetype – try download";
