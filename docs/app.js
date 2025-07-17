@@ -35,7 +35,7 @@ async function apiRequest(action, method, body = null, query = "") {
   }
 }
 
-// File actions with dynamic ID support
+// 📄 Fetch metadata for a single file
 async function fetchFileMeta(id) {
   const { response } = await apiRequest("read", "GET");
   const data = await response.json();
@@ -44,6 +44,7 @@ async function fetchFileMeta(id) {
     : null;
 }
 
+// ⬇️ Download file
 async function downloadFile(fileId) {
   try {
     const file = await fetchFileMeta(fileId);
@@ -77,6 +78,7 @@ async function downloadFile(fileId) {
   }
 }
 
+// 👁️ View file
 async function viewFile(fileId) {
   try {
     const query = `id=${fileId}&as_attachment=false`;
@@ -88,6 +90,7 @@ async function viewFile(fileId) {
   }
 }
 
+// 🗑️ Delete file
 async function deleteFile(fileId) {
   try {
     const body = new URLSearchParams({ id: fileId.toString() }).toString();
@@ -101,6 +104,7 @@ async function deleteFile(fileId) {
   }
 }
 
+// ⬆️ Upload file
 async function uploadFile(fileInput) {
   const file = fileInput?.files?.[0];
   if (!file) return { status: "warning", message: "No file selected" };
@@ -119,6 +123,7 @@ async function uploadFile(fileInput) {
   }
 }
 
+// 🗂️ Fetch all files
 async function fetchAllFiles() {
   try {
     const { response } = await apiRequest("read", "GET");
@@ -127,5 +132,20 @@ async function fetchAllFiles() {
   } catch (error) {
     console.error("Fetch files failed:", error.message);
     return [];
+  }
+}
+
+// ✏️ Rename file via modal (added function)
+async function renameFile(fileId, newName, type) {
+  try {
+    const body = JSON.stringify({ name: newName, type });
+    const query = `id=${fileId}`;
+    const { response } = await apiRequest("update", "POST", body, query);
+    const result = await response.json();
+    if (result.error) throw new Error(result.error);
+    return { status: "success", message: "File renamed successfully" };
+  } catch (error) {
+    console.error("Rename failed:", error.message);
+    return { status: "error", message: "Rename failed" };
   }
 }
