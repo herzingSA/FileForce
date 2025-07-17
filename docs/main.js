@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   let pendingRenameId = null;
   let pendingRenameType = null;
 
-  // ✅ Show status inline
+  // 💬 Inline status
   function showStatus(message, type = "info") {
     statusBox.textContent = message;
     statusBox.className = `small ms-3 text-${type}`;
@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     triggers.forEach((el) => new bootstrap.Tooltip(el));
   }
 
-  // 🧠 Determine if MIME type supports preview
+  // 🧠 MIME-aware viewable types
   function isViewableType(type) {
     const viewableTypes = [
       "image/jpeg",
@@ -36,7 +36,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     return viewableTypes.includes(type.toLowerCase());
   }
 
-  // 📋 Render file table
+  // 🧩 Render file table
   function renderTable(files) {
     tableBody.innerHTML = "";
 
@@ -63,16 +63,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       dateCell.textContent = file.created_at;
 
       const actionsCell = document.createElement("td");
-
-      let viewButton = "";
-      if (isViewableType(file.type)) {
-        viewButton = `
-          <button class="btn btn-sm btn-outline-secondary me-1" data-bs-toggle="tooltip" title="View"
+      const viewButton = isViewableType(file.type)
+        ? `<button class="btn btn-sm btn-outline-secondary me-1" data-bs-toggle="tooltip" title="View"
             onclick="handleView(${file.id})">
             <i class="bi bi-eye"></i>
-          </button>
-        `;
-      }
+          </button>`
+        : "";
 
       actionsCell.innerHTML = `
         <button class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="tooltip" title="Download"
@@ -97,7 +93,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     activateTooltips();
   }
 
-  // 📝 Rename via modal
+  // ✏️ Rename modal logic
   window.handleRename = (id, currentName, type) => {
     pendingRenameId = id;
     pendingRenameType = type;
@@ -127,7 +123,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       pendingRenameId = null;
     });
 
-  // 📥 Action handlers
+  // 📥 File actions
   window.handleDownload = async (id) => {
     await downloadFile(id);
     showStatus("File download started", "info");
@@ -158,11 +154,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         pendingDeleteId = null;
       }
 
-      const modalEl = document.getElementById("confirmDeleteModal");
-      bootstrap.Modal.getInstance(modalEl)?.hide();
+      bootstrap.Modal.getInstance(
+        document.getElementById("confirmDeleteModal")
+      )?.hide();
     });
 
-  // 🖱️ Drag & drop events
+  // 🖱️ Drag & Drop behavior
   dropZone.addEventListener("dragover", (e) => {
     e.preventDefault();
     dropZone.classList.add("border-success");
@@ -186,7 +183,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // 🟢 Upload via button
+  // 🟢 Manual upload button
   document.getElementById("uploadBtn").addEventListener("click", async () => {
     const input = document.getElementById("fileInput");
     await uploadFile({ files: input.files });
