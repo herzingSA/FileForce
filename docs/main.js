@@ -16,10 +16,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   function activateTooltips() {
-    const tooltipTriggerList = [].slice.call(
-      document.querySelectorAll('[data-bs-toggle="tooltip"]')
-    );
-    tooltipTriggerList.forEach((el) => new bootstrap.Tooltip(el));
+    const triggers = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    triggers.forEach((el) => new bootstrap.Tooltip(el));
   }
 
   function sortFiles(files) {
@@ -45,6 +43,26 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       return 0;
     });
+  }
+
+  function updateSortArrows() {
+    document.querySelectorAll(".sort-arrow").forEach((arrow) => {
+      arrow.textContent = "";
+    });
+
+    const idMap = {
+      name: "sort-filename",
+      type: "sort-type",
+      created_at: "sort-date",
+    };
+
+    const targetId = idMap[sortField];
+    if (targetId) {
+      const arrowSpan = document.querySelector(`#${targetId} .sort-arrow`);
+      if (arrowSpan) {
+        arrowSpan.textContent = sortDirection === "asc" ? "▲" : "▼";
+      }
+    }
   }
 
   function renderTable(files) {
@@ -99,6 +117,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     activateTooltips();
+    updateSortArrows();
   }
 
   function toggleSort(field) {
@@ -112,11 +131,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     fetchAllFiles().then(renderTable);
   }
 
-  // 📝 Rename
   window.handleRename = (id, currentName, type) => {
     pendingRenameId = id;
     pendingRenameType = type;
     document.getElementById("renameInput").value = currentName;
+
     const modal = new bootstrap.Modal(document.getElementById("renameModal"));
     modal.show();
   };
@@ -185,6 +204,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   dropZone.addEventListener("drop", async (e) => {
     e.preventDefault();
     dropZone.classList.remove("border-success");
+
     const files = e.dataTransfer.files;
     if (files.length > 0) {
       await uploadFile({ files });
@@ -202,15 +222,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderTable(updatedFiles);
   });
 
-  // ⬆️ Sorting header event bindings
+  // 🔃 Sorting header event bindings
   document
-    .querySelector("th:nth-child(1)")
+    .getElementById("sort-filename")
     .addEventListener("click", () => toggleSort("name"));
   document
-    .querySelector("th:nth-child(2)")
+    .getElementById("sort-type")
     .addEventListener("click", () => toggleSort("type"));
   document
-    .querySelector("th:nth-child(3)")
+    .getElementById("sort-date")
     .addEventListener("click", () => toggleSort("created_at"));
 
   const allFiles = await fetchAllFiles();
