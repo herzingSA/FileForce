@@ -1,76 +1,202 @@
-// brr
 document.addEventListener("DOMContentLoaded", async () => {
   const tableBody = document.getElementById("fileTableBody");
-  const statusArea = document.getElementById("statusArea");
+  const statusBox = document.getElementById("statusBox");
+  const dropZone = document.getElementById("dropZone");
 
-  const allFiles = await fetchAllFiles();
+  let pendingDeleteId = null;
+  let pendingRenameId = null;
+  let pendingRenameType = null;
 
-  // Utility: Badge renderer
+  // ✅ Show status inline
   function showStatus(message, type = "info") {
-    const badge = document.createElement("div");
-    badge.textContent = message;
-    badge.className = `alert alert-${type} mb-2`;
-    statusArea.appendChild(badge);
-    setTimeout(() => badge.remove(), 5000);
+    statusBox.textContent = message;
+    statusBox.className = `small ms-3 text-${type}`;
   }
 
-  // Utility: Tooltip initializer
+  // 🎯 Enable tooltips
   function activateTooltips() {
-    const tooltipTriggerList = [].slice.call(
-      document.querySelectorAll('[data-bs-toggle="tooltip"]')
-    );
-    tooltipTriggerList.forEach((el) => new bootstrap.Tooltip(el));
+    const triggers = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    triggers.forEach((el) => new bootstrap.Tooltip(el));
   }
 
-  // Render table rows
+  // 🧠 Determine if MIME type supports preview
+  function isViewableType(type) {
+    const viewableTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/gif",
+      "application/pdf",
+      "text/plain",
+      "text/html",
+      "audio/mpeg",
+      "audio/wav",
+      "video/mp4",
+      "video/webm",
+    ];
+    return viewableTypes.includes(type.toLowerCase());
+  }
+
+  // 📋 Render file table
   function renderTable(files) {
     tableBody.innerHTML = "";
+
     files.forEach((file) => {
       const row = document.createElement("tr");
 
-      row.innerHTML = `
-        <td>${file.name}</td>
-        <td>${file.type.toUpperCase()}</td>
-        <td>${file.created_at}</td>
-        <td>
-          <button class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="tooltip" title="Download"
-            onclick="handleDownload(${file.id})">
-            <i class="bi bi-download"></i>
-          </button>
+      const filenameCell = document.createElement("td");
+      filenameCell.innerHTML = `
+        <span
+          style="cursor:pointer;"
+          class="filename-text"
+          data-bs-toggle="tooltip"
+          title="Click to Rename"
+          onclick="handleRename(${file.id}, '${file.name}', '${file.type}')"
+        >
+          <i class="bi bi-pencil-fill me-1 text-muted"></i> ${file.name}
+        </span>
+      `;
+
+      const typeCell = document.createElement("td");
+      typeCell.textContent = file.type.toUpperCase();
+
+      const dateCell = document.createElement("td");
+      dateCell.textContent = file.created_at;
+
+      const actionsCell = document.createElement("td");
+
+      let viewButton = "";
+      if (isViewableType(file.type)) {
+        viewButton = `
           <button class="btn btn-sm btn-outline-secondary me-1" data-bs-toggle="tooltip" title="View"
             onclick="handleView(${file.id})">
             <i class="bi bi-eye"></i>
           </button>
-          <button class="btn btn-sm btn-outline-danger" data-bs-toggle="tooltip" title="Delete"
-            onclick="handleDelete(${file.id})">
-            <i class="bi bi-trash"></i>
-          </button>
-        </td>
+        `;
+      }
+
+      actionsCell.innerHTML = `
+        <button class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="tooltip" title="Download"
+          onclick="handleDownload(${file.id})">
+          <i class="bi bi-download"></i>
+        </button>
+        ${viewButton}
+        <button class="btn btn-sm btn-outline-danger" data-bs-toggle="tooltip" title="Delete"
+          onclick="handleDelete(${file.id})">
+          <i class="bi bi-trash"></i>
+        </button>
       `;
+
+      row.appendChild(filenameCell);
+      row.appendChild(typeCell);
+      row.appendChild(dateCell);
+      row.appendChild(actionsCell);
+
       tableBody.appendChild(row);
     });
+
     activateTooltips();
   }
 
-  // Action handlers
+  // 📝 Rename via modal
+  window.handleRename = (id, currentName, type) => {
+    pendingRenameId = id;
+    pendingRenameType = type;
+    document.getElementById("renameInput").value = currentName;
+
+    const modal = new bootstrap.Modal(document.getElementById("renameModal"));
+    modal.show();
+  };
+
+  document
+    .getElementById("renameConfirmBtn")
+    .addEventListener("click", async () => {
+      const input = document.getElementById("renameInput");
+      const newName = input.value.trim();
+
+      if (newName && pendingRenameId !== null) {
+        await renameFile(pendingRenameId, newName, pendingRenameType);
+        showStatus("File renamed successfully", "success");
+
+        const updatedFiles = await fetchAllFiles();
+        renderTable(updatedFiles);
+      }
+
+      bootstrap.Modal.getInstance(
+        document.getElementById("renameModal")
+      )?.hide();
+      pendingRenameId = null;
+    });
+
+  // 📥 Action handlers
   window.handleDownload = async (id) => {
-    const result = await downloadFile(id);
-    showStatus(result.message, result.status);
+    await downloadFile(id);
+    showStatus("File download started", "info");
   };
 
   window.handleView = async (id) => {
-    const result = await viewFile(id);
-    showStatus(result.message, result.status);
+    await viewFile(id);
+    showStatus("File viewed successfully", "info");
   };
 
   window.handleDelete = async (id) => {
-    const result = await deleteFile(id);
-    showStatus(result.message, result.status);
-    // Refresh table
-    const updatedFiles = await fetchAllFiles();
-    renderTable(updatedFiles);
+    pendingDeleteId = id;
+    const modal = new bootstrap.Modal(
+      document.getElementById("confirmDeleteModal")
+    );
+    modal.show();
   };
 
-  // Initial render
+  document
+    .getElementById("confirmDeleteBtn")
+    .addEventListener("click", async () => {
+      if (pendingDeleteId !== null) {
+        await deleteFile(pendingDeleteId);
+        showStatus("File deleted successfully", "success");
+
+        const updatedFiles = await fetchAllFiles();
+        renderTable(updatedFiles);
+        pendingDeleteId = null;
+      }
+
+      const modalEl = document.getElementById("confirmDeleteModal");
+      bootstrap.Modal.getInstance(modalEl)?.hide();
+    });
+
+  // 🖱️ Drag & drop events
+  dropZone.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    dropZone.classList.add("border-success");
+  });
+
+  dropZone.addEventListener("dragleave", () => {
+    dropZone.classList.remove("border-success");
+  });
+
+  dropZone.addEventListener("drop", async (e) => {
+    e.preventDefault();
+    dropZone.classList.remove("border-success");
+
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      await uploadFile({ files });
+      showStatus("File uploaded successfully", "success");
+
+      const updatedFiles = await fetchAllFiles();
+      renderTable(updatedFiles);
+    }
+  });
+
+  // 🟢 Upload via button
+  document.getElementById("uploadBtn").addEventListener("click", async () => {
+    const input = document.getElementById("fileInput");
+    await uploadFile({ files: input.files });
+    showStatus("File uploaded successfully", "success");
+
+    const updatedFiles = await fetchAllFiles();
+    renderTable(updatedFiles);
+  });
+
+  // 🚀 Initial render
+  const allFiles = await fetchAllFiles();
   renderTable(allFiles);
 });
