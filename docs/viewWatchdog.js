@@ -40,5 +40,15 @@ document.addEventListener("mouseover", (e) => {
     ? "View"
     : "Not a viewable filetype – try download";
 
+  // Remove existing tooltip instance
+  const existing = bootstrap.Tooltip.getInstance(btn);
+  if (existing) {
+    existing.dispose();
+  }
+
+  // Update native title
   btn.setAttribute("title", tooltipText);
+
+  // Recreate tooltip with correct content
+  new bootstrap.Tooltip(btn);
 });
