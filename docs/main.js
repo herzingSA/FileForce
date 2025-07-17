@@ -1,25 +1,25 @@
-document.addEventListener("DOMContentLoaded", async () => {
+window.onload = async () => {
   const tableBody = document.getElementById("fileTableBody");
   const statusBox = document.getElementById("statusBox");
   const dropZone = document.getElementById("dropZone");
+  const uploadBtn = document.getElementById("uploadBtn");
+  const renameBtn = document.getElementById("renameConfirmBtn");
+  const deleteBtn = document.getElementById("confirmDeleteBtn");
 
   let pendingDeleteId = null;
   let pendingRenameId = null;
   let pendingRenameType = null;
 
-  // 💬 Inline status
   function showStatus(message, type = "info") {
     statusBox.textContent = message;
     statusBox.className = `small ms-3 text-${type}`;
   }
 
-  // 🎯 Enable tooltips
   function activateTooltips() {
     const triggers = document.querySelectorAll('[data-bs-toggle="tooltip"]');
     triggers.forEach((el) => new bootstrap.Tooltip(el));
   }
 
-  // 🧠 MIME-aware viewable types
   function isViewableType(type) {
     const viewableTypes = [
       "image/jpeg",
@@ -36,7 +36,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     return viewableTypes.includes(type.toLowerCase());
   }
 
-  // 🧩 Render file table
   function renderTable(files) {
     tableBody.innerHTML = "";
 
@@ -93,7 +92,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     activateTooltips();
   }
 
-  // ✏️ Rename modal logic
   window.handleRename = (id, currentName, type) => {
     pendingRenameId = id;
     pendingRenameType = type;
@@ -103,27 +101,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     modal.show();
   };
 
-  document
-    .getElementById("renameConfirmBtn")
-    .addEventListener("click", async () => {
-      const input = document.getElementById("renameInput");
-      const newName = input.value.trim();
+  renameBtn.addEventListener("click", async () => {
+    const input = document.getElementById("renameInput");
+    const newName = input.value.trim();
 
-      if (newName && pendingRenameId !== null) {
-        await renameFile(pendingRenameId, newName, pendingRenameType);
-        showStatus("File renamed successfully", "success");
+    if (newName && pendingRenameId !== null) {
+      await renameFile(pendingRenameId, newName, pendingRenameType);
+      showStatus("File renamed successfully", "success");
+      const updatedFiles = await fetchAllFiles();
+      renderTable(updatedFiles);
+    }
 
-        const updatedFiles = await fetchAllFiles();
-        renderTable(updatedFiles);
-      }
+    bootstrap.Modal.getInstance(document.getElementById("renameModal"))?.hide();
+    pendingRenameId = null;
+  });
 
-      bootstrap.Modal.getInstance(
-        document.getElementById("renameModal")
-      )?.hide();
-      pendingRenameId = null;
-    });
-
-  // 📥 File actions
   window.handleDownload = async (id) => {
     await downloadFile(id);
     showStatus("File download started", "info");
@@ -142,24 +134,20 @@ document.addEventListener("DOMContentLoaded", async () => {
     modal.show();
   };
 
-  document
-    .getElementById("confirmDeleteBtn")
-    .addEventListener("click", async () => {
-      if (pendingDeleteId !== null) {
-        await deleteFile(pendingDeleteId);
-        showStatus("File deleted successfully", "success");
+  deleteBtn.addEventListener("click", async () => {
+    if (pendingDeleteId !== null) {
+      await deleteFile(pendingDeleteId);
+      showStatus("File deleted successfully", "success");
+      const updatedFiles = await fetchAllFiles();
+      renderTable(updatedFiles);
+      pendingDeleteId = null;
+    }
 
-        const updatedFiles = await fetchAllFiles();
-        renderTable(updatedFiles);
-        pendingDeleteId = null;
-      }
+    bootstrap.Modal.getInstance(
+      document.getElementById("confirmDeleteModal")
+    )?.hide();
+  });
 
-      bootstrap.Modal.getInstance(
-        document.getElementById("confirmDeleteModal")
-      )?.hide();
-    });
-
-  // 🖱️ Drag & Drop behavior
   dropZone.addEventListener("dragover", (e) => {
     e.preventDefault();
     dropZone.classList.add("border-success");
@@ -177,23 +165,19 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (files.length > 0) {
       await uploadFile({ files });
       showStatus("File uploaded successfully", "success");
-
       const updatedFiles = await fetchAllFiles();
       renderTable(updatedFiles);
     }
   });
 
-  // 🟢 Manual upload button
-  document.getElementById("uploadBtn").addEventListener("click", async () => {
+  uploadBtn.addEventListener("click", async () => {
     const input = document.getElementById("fileInput");
     await uploadFile({ files: input.files });
     showStatus("File uploaded successfully", "success");
-
     const updatedFiles = await fetchAllFiles();
     renderTable(updatedFiles);
   });
 
-  // 🚀 Initial render
   const allFiles = await fetchAllFiles();
   renderTable(allFiles);
-});
+};
