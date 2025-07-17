@@ -7,13 +7,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   let pendingRenameId = null;
   let pendingRenameType = null;
 
-  // 💬 Display status next to Upload button
+  let sortField = null;
+  let sortDirection = "asc"; // "asc" or "desc"
+
   function showStatus(message, type = "info") {
     statusBox.textContent = message;
     statusBox.className = `small ms-3 text-${type}`;
   }
 
-  // 🎯 Activate Bootstrap tooltips
   function activateTooltips() {
     const tooltipTriggerList = [].slice.call(
       document.querySelectorAll('[data-bs-toggle="tooltip"]')
@@ -21,14 +22,39 @@ document.addEventListener("DOMContentLoaded", async () => {
     tooltipTriggerList.forEach((el) => new bootstrap.Tooltip(el));
   }
 
-  // 📋 Render file table
+  function sortFiles(files) {
+    if (!sortField) return files;
+
+    return [...files].sort((a, b) => {
+      let aVal = a[sortField];
+      let bVal = b[sortField];
+
+      if (sortField === "name" || sortField === "type") {
+        aVal = aVal.toLowerCase();
+        bVal = bVal.toLowerCase();
+        if (aVal < bVal) return sortDirection === "asc" ? -1 : 1;
+        if (aVal > bVal) return sortDirection === "asc" ? 1 : -1;
+        return 0;
+      }
+
+      if (sortField === "created_at") {
+        const aDate = new Date(aVal);
+        const bDate = new Date(bVal);
+        return sortDirection === "asc" ? aDate - bDate : bDate - aDate;
+      }
+
+      return 0;
+    });
+  }
+
   function renderTable(files) {
     tableBody.innerHTML = "";
 
-    files.forEach((file) => {
+    const sorted = sortFiles(files);
+
+    sorted.forEach((file) => {
       const row = document.createElement("tr");
 
-      // Filename cell with pencil icon and modal trigger
       const filenameCell = document.createElement("td");
       filenameCell.innerHTML = `
         <span
@@ -75,12 +101,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     activateTooltips();
   }
 
-  // 📝 Rename via modal
+  function toggleSort(field) {
+    if (sortField === field) {
+      sortDirection = sortDirection === "asc" ? "desc" : "asc";
+    } else {
+      sortField = field;
+      sortDirection = "asc";
+    }
+
+    fetchAllFiles().then(renderTable);
+  }
+
+  // 📝 Rename
   window.handleRename = (id, currentName, type) => {
     pendingRenameId = id;
     pendingRenameType = type;
     document.getElementById("renameInput").value = currentName;
-
     const modal = new bootstrap.Modal(document.getElementById("renameModal"));
     modal.show();
   };
@@ -94,7 +130,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (newName && pendingRenameId !== null) {
         await renameFile(pendingRenameId, newName, pendingRenameType);
         showStatus("File renamed successfully", "success");
-
         const updatedFiles = await fetchAllFiles();
         renderTable(updatedFiles);
       }
@@ -105,19 +140,16 @@ document.addEventListener("DOMContentLoaded", async () => {
       pendingRenameId = null;
     });
 
-  // ⬇️ Download
   window.handleDownload = async (id) => {
     await downloadFile(id);
     showStatus("File download started", "info");
   };
 
-  // 👁️ View
   window.handleView = async (id) => {
     await viewFile(id);
     showStatus("File viewed successfully", "info");
   };
 
-  // 🗑️ Delete modal logic
   window.handleDelete = async (id) => {
     pendingDeleteId = id;
     const modal = new bootstrap.Modal(
@@ -132,7 +164,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (pendingDeleteId !== null) {
         await deleteFile(pendingDeleteId);
         showStatus("File deleted successfully", "success");
-
         const updatedFiles = await fetchAllFiles();
         renderTable(updatedFiles);
         pendingDeleteId = null;
@@ -142,7 +173,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       bootstrap.Modal.getInstance(modalEl)?.hide();
     });
 
-  // 🖱️ Drag & Drop support
   dropZone.addEventListener("dragover", (e) => {
     e.preventDefault();
     dropZone.classList.add("border-success");
@@ -155,28 +185,34 @@ document.addEventListener("DOMContentLoaded", async () => {
   dropZone.addEventListener("drop", async (e) => {
     e.preventDefault();
     dropZone.classList.remove("border-success");
-
     const files = e.dataTransfer.files;
     if (files.length > 0) {
       await uploadFile({ files });
       showStatus("File uploaded successfully", "success");
-
       const updatedFiles = await fetchAllFiles();
       renderTable(updatedFiles);
     }
   });
 
-  // 🟢 Upload via button
   document.getElementById("uploadBtn").addEventListener("click", async () => {
     const input = document.getElementById("fileInput");
     await uploadFile({ files: input.files });
     showStatus("File uploaded successfully", "success");
-
     const updatedFiles = await fetchAllFiles();
     renderTable(updatedFiles);
   });
 
-  // 🚀 Initial render
+  // ⬆️ Sorting header event bindings
+  document
+    .querySelector("th:nth-child(1)")
+    .addEventListener("click", () => toggleSort("name"));
+  document
+    .querySelector("th:nth-child(2)")
+    .addEventListener("click", () => toggleSort("type"));
+  document
+    .querySelector("th:nth-child(3)")
+    .addEventListener("click", () => toggleSort("created_at"));
+
   const allFiles = await fetchAllFiles();
   renderTable(allFiles);
 });
